@@ -14,7 +14,7 @@ public final class HBaseConstants {
   // NodeIds
   public static final String MASTER_NODE_ID = "masternode";
   public static final String SLAVE_NODE_ID = "slavenode";
-
+  
   // NameNode TaskId
   public static final String MASTER_NODE_TASKID = ".masternode.masternode.";
 

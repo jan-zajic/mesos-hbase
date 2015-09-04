@@ -185,7 +185,7 @@ public abstract class AbstractNodeExecutor implements Executor {
     reloadConfig();
     if (task.getProcess() == null) {
       try {
-        ProcessBuilder processBuilder = new ProcessBuilder("sh", "-c", task.getCmd());
+        ProcessBuilder processBuilder = new ProcessBuilder("sh", "-c", "cd hbase-mesos-executor* && " + task.getCmd());
         task.setProcess(processBuilder.start());
         redirectProcess(task.getProcess());
       } catch (IOException e) {
