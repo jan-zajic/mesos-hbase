@@ -183,9 +183,15 @@ public abstract class AbstractNodeExecutor implements Executor {
    */
   protected void startProcess(ExecutorDriver driver, Task task) {
     reloadConfig();
+    
+    File sandboxHdfsBinary = new File(System.getProperty("user.dir"));
+    Path sandboxHdfsBinaryPath = Paths.get(sandboxHdfsBinary.getAbsolutePath());
+    
+    log.info("The startProcess path is: " + sandboxHdfsBinaryPath);
+    
     if (task.getProcess() == null) {
       try {
-        ProcessBuilder processBuilder = new ProcessBuilder("sh", "-c", "cd hbase-mesos-executor* && " + task.getCmd());
+        ProcessBuilder processBuilder = new ProcessBuilder("sh", "-c", task.getCmd());
         task.setProcess(processBuilder.start());
         redirectProcess(task.getProcess());
       } catch (IOException e) {
