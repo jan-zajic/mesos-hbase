@@ -465,15 +465,30 @@ public class HBaseScheduler implements org.apache.mesos.Scheduler, Runnable {
             .setRole(hbaseFrameworkConfig.getHbaseRole())
             .build());
   }
-
-  private boolean tryToLaunchMasterNode(SchedulerDriver driver, Offer offer) {
-    if (offerNotEnoughResources(offer,
-        (hbaseFrameworkConfig.getNameNodeCpus()),
-        (hbaseFrameworkConfig.getNameNodeHeapSize()))) {
-      log.info("namenode offer does not have enough resources.");
-      return false;
-    }
-
+  
+  private boolean acceptOffer(Offer offer, String nodeType, double cpu, int memory)
+  {
+      if (offerNotEnoughCpu(offer, cpu)) 
+      {      
+        log.info(nodeType+" node offer does not have enough cpu.\n Required "+cpu+". (NameNodeCpus)");
+        return false;
+      }
+      else if(offerNotEnoughMemory(offer, memory))
+      {
+        double requiredMem = (memory * hbaseFrameworkConfig.getJvmOverhead()) + (hbaseFrameworkConfig.getExecutorHeap() * hbaseFrameworkConfig.getJvmOverhead());
+        String memLog = "Required "+requiredMem+" mem ("+nodeType+"NodeHeapSize * jvmOverhead) + (executorHeap * jvmOverhead)";  
+        log.info(nodeType+" node offer does not have enough cpu.\n"+memLog);
+        return false;
+      } else {
+          return true;
+      }
+  }
+  
+  private boolean tryToLaunchMasterNode(SchedulerDriver driver, Offer offer) 
+  {
+    if(!acceptOffer(offer, "master", hbaseFrameworkConfig.getNameNodeCpus(), hbaseFrameworkConfig.getNameNodeHeapSize()))
+        return false;
+    
     boolean launch = false;
     List<String> deadNameNodes = persistenceStore.getDeadNameNodes();
 
@@ -501,11 +516,8 @@ public class HBaseScheduler implements org.apache.mesos.Scheduler, Runnable {
   }
 
   private boolean tryToLaunchDataNode(SchedulerDriver driver, Offer offer) {
-    if (offerNotEnoughResources(offer, hbaseFrameworkConfig.getDataNodeCpus(),
-        hbaseFrameworkConfig.getDataNodeHeapSize())) {
-      log.info("datanode offer does not have enough resources");
-      return false;
-    }
+    if(!acceptOffer(offer, "slave", hbaseFrameworkConfig.getNameNodeCpus(), hbaseFrameworkConfig.getNameNodeHeapSize()))
+        return false;
 
     boolean launch = false;
     List<String> deadDataNodes = persistenceStore.getDeadDataNodes();
@@ -582,12 +594,18 @@ public class HBaseScheduler implements org.apache.mesos.Scheduler, Runnable {
     }
   }
 
-  private boolean offerNotEnoughResources(Offer offer, double cpus, int mem) {
+  private boolean offerNotEnoughCpu(Offer offer, double cpus) {
     for (Resource offerResource : offer.getResourcesList()) {
       if (offerResource.getName().equals("cpus") &&
           cpus + hbaseFrameworkConfig.getExecutorCpus() > offerResource.getScalar().getValue()) {
         return true;
       }
+    }
+    return false;
+  }
+  
+  private boolean offerNotEnoughMemory(Offer offer, int mem) {
+    for (Resource offerResource : offer.getResourcesList()) {
       if (offerResource.getName().equals("mem") &&
           (mem * hbaseFrameworkConfig.getJvmOverhead())
               + (hbaseFrameworkConfig.getExecutorHeap() * hbaseFrameworkConfig.getJvmOverhead())
