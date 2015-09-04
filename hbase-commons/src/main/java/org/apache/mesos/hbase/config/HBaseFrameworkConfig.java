@@ -93,7 +93,7 @@ public class HBaseFrameworkConfig {
   }
 
   public String getConfigPath() {
-    return getConf().get("mesos.hbase.config.path", "etc/hadoop/hbase-site.xml");
+    return getConf().get("mesos.hbase.config.path", "conf/hbase-site.xml");
   }
 
   public int getHadoopHeapSize() {
