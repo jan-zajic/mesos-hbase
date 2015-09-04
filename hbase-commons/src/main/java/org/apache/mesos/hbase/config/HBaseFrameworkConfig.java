@@ -21,17 +21,15 @@ public class HBaseFrameworkConfig {
 
   private static final int DEFAULT_HADOOP_HEAP_SIZE = 512;
   private static final int DEFAULT_EXECUTOR_HEAP_SIZE = 256;
-  private static final int DEFAULT_DATANODE_HEAP_SIZE = 1024;
-  private static final int DEFAULT_NAMENODE_HEAP_SIZE = 4096;
+  private static final int DEFAULT_SLAVENODE_HEAP_SIZE = 1024;
+  private static final int DEFAULT_MASTERNODE_HEAP_SIZE = 4096;
 
   private static final double DEFAULT_CPUS = 0.5;
   private static final double DEFAULT_EXECUTOR_CPUS = DEFAULT_CPUS;
   private static final double DEFAULT_NAMENODE_CPUS = 1;
-  private static final double DEFAULT_JOURNAL_CPUS = 1;
   private static final double DEFAULT_DATANODE_CPUS = 1;
 
-  private static final double DEFAULT_JVM_OVERHEAD = 1.35;
-  private static final int DEFAULT_JOURNAL_NODE_COUNT = 3;
+  private static final double DEFAULT_JVM_OVERHEAD = 1.15;
   private static final int DEFAULT_FAILOVER_TIMEOUT = 31449600;
   private static final int DEFAULT_ZK_TIME_MS = 20000;
   private static final int DEFAULT_RECONCILIATION_TIMEOUT = 30;
@@ -102,16 +100,12 @@ public class HBaseFrameworkConfig {
     return getConf().getInt("mesos.hbase.hadoop.heap.size", DEFAULT_HADOOP_HEAP_SIZE);
   }
 
-  public int getDataNodeHeapSize() {
-    return getConf().getInt("mesos.hbase.datanode.heap.size", DEFAULT_DATANODE_HEAP_SIZE);
+  public int getSlaveNodeHeapSize() {
+    return getConf().getInt("mesos.hbase.slave.heap.size", DEFAULT_SLAVENODE_HEAP_SIZE);
   }
 
-  public int getJournalNodeHeapSize() {
-    return getHadoopHeapSize();
-  }
-
-  public int getNameNodeHeapSize() {
-    return getConf().getInt("mesos.hbase.namenode.heap.size", DEFAULT_NAMENODE_HEAP_SIZE);
+  public int getMasterNodeHeapSize() {
+    return getConf().getInt("mesos.hbase.master.heap.size", DEFAULT_MASTERNODE_HEAP_SIZE);
   }
 
   public int getExecutorHeap() {
@@ -121,14 +115,11 @@ public class HBaseFrameworkConfig {
   public int getTaskHeapSize(String taskName) {
     int size;
     switch (taskName) {
-      case "namenode":
-        size = getNameNodeHeapSize();
+      case "masternode":
+        size = getMasterNodeHeapSize();
         break;
-      case "datanode":
-        size = getDataNodeHeapSize();
-        break;
-      case "journalnode":
-        size = getJournalNodeHeapSize();
+      case "slavenode":
+        size = getSlaveNodeHeapSize();
         break;
       default:
         final String msg = "Invalid request for heapsize for taskName = " + taskName;
@@ -162,29 +153,22 @@ public class HBaseFrameworkConfig {
     return getConf().getDouble("mesos.hbase.executor.cpus", DEFAULT_EXECUTOR_CPUS);
   }
 
-  public double getNameNodeCpus() {
-    return getConf().getDouble("mesos.hbase.namenode.cpus", DEFAULT_NAMENODE_CPUS);
+  public double getMasterNodeCpus() {
+    return getConf().getDouble("mesos.hbase.master.cpus", DEFAULT_NAMENODE_CPUS);
   }
 
-  public double getJournalNodeCpus() {
-    return getConf().getDouble("mesos.hbase.journalnode.cpus", DEFAULT_JOURNAL_CPUS);
-  }
-
-  public double getDataNodeCpus() {
-    return getConf().getDouble("mesos.hbase.datanode.cpus", DEFAULT_DATANODE_CPUS);
+  public double getSlaveNodeCpus() {
+    return getConf().getDouble("mesos.hbase.slave.cpus", DEFAULT_DATANODE_CPUS);
   }
 
   public double getTaskCpus(String taskName) {
     double cpus = DEFAULT_CPUS;
     switch (taskName) {
-      case "namenode":
-        cpus = getNameNodeCpus();
+      case "masternode":
+        cpus = getMasterNodeCpus();
         break;
-      case "datanode":
-        cpus = getDataNodeCpus();
-        break;
-      case "journalnode":
-        cpus = getJournalNodeCpus();
+      case "slavenode":
+        cpus = getSlaveNodeCpus();
         break;
       default:
         final String msg = "Invalid request for CPUs for taskName= " + taskName;
@@ -192,10 +176,6 @@ public class HBaseFrameworkConfig {
         throw new ConfigurationException(msg);
     }
     return cpus;
-  }
-
-  public int getJournalNodeCount() {
-    return getConf().getInt("mesos.hbase.journalnode.count", DEFAULT_JOURNAL_NODE_COUNT);
   }
 
   public String getFrameworkName() {

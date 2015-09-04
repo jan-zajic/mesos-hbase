@@ -410,14 +410,14 @@ public class HBaseScheduler implements org.apache.mesos.Scheduler, Runnable {
                                 Environment.Variable
                                     .newBuilder()
                                     .setName("HADOOP_NAMENODE_OPTS")
-                                    .setValue("-Xmx" + hbaseFrameworkConfig.getNameNodeHeapSize()
-                                            + "m -Xms" + hbaseFrameworkConfig.getNameNodeHeapSize()
+                                    .setValue("-Xmx" + hbaseFrameworkConfig.getMasterNodeHeapSize()
+                                            + "m -Xms" + hbaseFrameworkConfig.getMasterNodeHeapSize()
                                             + "m").build(),
                                 Environment.Variable
                                     .newBuilder()
                                     .setName("HADOOP_DATANODE_OPTS")
-                                    .setValue("-Xmx" + hbaseFrameworkConfig.getDataNodeHeapSize()
-                                            + "m -Xms" + hbaseFrameworkConfig.getDataNodeHeapSize()
+                                    .setValue("-Xmx" + hbaseFrameworkConfig.getSlaveNodeHeapSize()
+                                            + "m -Xms" + hbaseFrameworkConfig.getSlaveNodeHeapSize()
                                             + "m").build(),
                                 Environment.Variable.newBuilder()
                                     .setName("EXECUTOR_OPTS")
@@ -477,7 +477,7 @@ public class HBaseScheduler implements org.apache.mesos.Scheduler, Runnable {
       {
         double requiredMem = (memory * hbaseFrameworkConfig.getJvmOverhead()) + (hbaseFrameworkConfig.getExecutorHeap() * hbaseFrameworkConfig.getJvmOverhead());
         String memLog = "Required "+requiredMem+" mem ("+nodeType+"NodeHeapSize * jvmOverhead) + (executorHeap * jvmOverhead)";  
-        log.info(nodeType+" node offer does not have enough cpu.\n"+memLog);
+        log.info(nodeType+" node offer does not have enough memory.\n"+memLog);
         return false;
       } else {
           return true;
@@ -486,7 +486,7 @@ public class HBaseScheduler implements org.apache.mesos.Scheduler, Runnable {
   
   private boolean tryToLaunchMasterNode(SchedulerDriver driver, Offer offer) 
   {
-    if(!acceptOffer(offer, "master", hbaseFrameworkConfig.getNameNodeCpus(), hbaseFrameworkConfig.getNameNodeHeapSize()))
+    if(!acceptOffer(offer, "master", hbaseFrameworkConfig.getMasterNodeCpus(), hbaseFrameworkConfig.getMasterNodeHeapSize()))
         return false;
     
     boolean launch = false;
@@ -516,7 +516,7 @@ public class HBaseScheduler implements org.apache.mesos.Scheduler, Runnable {
   }
 
   private boolean tryToLaunchDataNode(SchedulerDriver driver, Offer offer) {
-    if(!acceptOffer(offer, "slave", hbaseFrameworkConfig.getNameNodeCpus(), hbaseFrameworkConfig.getNameNodeHeapSize()))
+    if(!acceptOffer(offer, "slave", hbaseFrameworkConfig.getMasterNodeCpus(), hbaseFrameworkConfig.getMasterNodeHeapSize()))
         return false;
 
     boolean launch = false;

@@ -95,18 +95,11 @@
     <value>/usr/local/lib/libmesos.so</value>
   </property>
 
-  <property>
-    <name>mesos.hbase.journalnode.count</name>
-    <description>Number of journal nodes (must be odd)</description>
-    <value>3</value>
-  </property>
-
   <!-- Additional settings for fine-tuning -->
-  <!--
   <property>
     <name>mesos.hbase.jvm.overhead</name>
     <description>Multiplier on resources reserved in order to account for JVM allocation</description>
-    <value>1.35</value>
+    <value>1.15</value>
   </property>
 
   <property>
@@ -115,12 +108,12 @@
   </property>
 
   <property>
-    <name>mesos.hbase.namenode.heap.size</name>
-    <value>4096</value>
+    <name>mesos.hbase.master.heap.size</name>
+    <value>1024</value>
   </property>
 
   <property>
-    <name>mesos.hbase.datanode.heap.size</name>
+    <name>mesos.hbase.slave.heap.size</name>
     <value>1024</value>
   </property>
 
@@ -135,17 +128,12 @@
   </property>
 
   <property>
-    <name>mesos.hbase.namenode.cpus</name>
+    <name>mesos.hbase.master.cpus</name>
     <value>1</value>
   </property>
 
   <property>
-    <name>mesos.hbase.journalnode.cpus</name>
-    <value>1</value>
-  </property>
-
-  <property>
-    <name>mesos.hbase.datanode.cpus</name>
+    <name>mesos.hbase.slave.cpus</name>
     <value>1</value>
   </property>
 
@@ -158,5 +146,5 @@
     <name>mesos.hbase.role</name>
     <value>*</value>
   </property>
-  -->
+  
 </configuration>
