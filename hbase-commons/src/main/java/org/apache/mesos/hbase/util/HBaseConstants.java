@@ -9,8 +9,6 @@ public final class HBaseConstants {
   public static final Integer TOTAL_MASTER_NODES = 1;
 
   // Messages
-  public static final String MASTER_NODE_INIT_MESSAGE = "-i";
-  public static final String MASTER_NODE_BOOTSTRAP_MESSAGE = "-b";
   public static final String RELOAD_CONFIG = "reload config";
 
   // NodeIds

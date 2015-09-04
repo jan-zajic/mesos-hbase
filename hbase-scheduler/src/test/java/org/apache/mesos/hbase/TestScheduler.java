@@ -69,7 +69,7 @@ public class TestScheduler {
     scheduler.statusUpdate(driver,
         createTaskStatus(taskId, Protos.TaskState.TASK_RUNNING));
 
-    verify(liveState).transitionTo(AcquisitionPhase.START_NAME_NODES);
+    verify(liveState).transitionTo(AcquisitionPhase.START_MASTER_NODES);
   }
 
   @Test
@@ -79,7 +79,7 @@ public class TestScheduler {
     scheduler.statusUpdate(driver,
         createTaskStatus(taskId, Protos.TaskState.TASK_RUNNING));
 
-    verify(liveState, never()).transitionTo(AcquisitionPhase.START_NAME_NODES);
+    verify(liveState, never()).transitionTo(AcquisitionPhase.START_MASTER_NODES);
   }
 
   @Test
@@ -87,37 +87,33 @@ public class TestScheduler {
     Protos.TaskID taskId = createTaskId(HBaseConstants.MASTER_NODE_TASKID + "1");
     Protos.SlaveID slaveId = createSlaveId("1");
 
-    when(liveState.getCurrentAcquisitionPhase()).thenReturn(AcquisitionPhase.START_NAME_NODES);
+    when(liveState.getCurrentAcquisitionPhase()).thenReturn(AcquisitionPhase.START_MASTER_NODES);
     when(liveState.getNameNodeSize()).thenReturn(2);
-    when(liveState.getFirstNameNodeTaskId()).thenReturn(taskId);
-    when(liveState.getFirstNameNodeSlaveId()).thenReturn(slaveId);
 
     scheduler.statusUpdate(driver,
         createTaskStatus(taskId, Protos.TaskState.TASK_RUNNING));
 
-    verify(liveState).transitionTo(AcquisitionPhase.FORMAT_NAME_NODES);
+    verify(liveState).transitionTo(AcquisitionPhase.SLAVE_NODES);
   }
 
   @Test
   public void statusUpdateTransitionFromFormatNameNodesToDataNodes() {
-    when(liveState.getCurrentAcquisitionPhase()).thenReturn(AcquisitionPhase.FORMAT_NAME_NODES);
+    when(liveState.getCurrentAcquisitionPhase()).thenReturn(AcquisitionPhase.SLAVE_NODES);
     when(liveState.getNameNodeSize()).thenReturn(HBaseConstants.TOTAL_MASTER_NODES);
-    when(liveState.isNameNode1Initialized()).thenReturn(true);
-    when(liveState.isNameNode2Initialized()).thenReturn(true);
 
     scheduler.statusUpdate(
         driver,
         createTaskStatus(createTaskId(HBaseConstants.MASTER_NODE_TASKID),
             Protos.TaskState.TASK_RUNNING));
 
-    verify(liveState).transitionTo(AcquisitionPhase.DATA_NODES);
+    verify(liveState).transitionTo(AcquisitionPhase.SLAVE_NODES);
   }
 
   @Test
   public void statusUpdateAquiringDataNodesJustStays() {
     Protos.TaskID taskId = createTaskId("1");
 
-    when(liveState.getCurrentAcquisitionPhase()).thenReturn(AcquisitionPhase.DATA_NODES);
+    when(liveState.getCurrentAcquisitionPhase()).thenReturn(AcquisitionPhase.SLAVE_NODES);
 
     scheduler.statusUpdate(driver,
         createTaskStatus(taskId, Protos.TaskState.TASK_RUNNING));
@@ -148,7 +144,7 @@ public class TestScheduler {
 
   @Test
   public void launchesNamenodeWhenInNamenode1Phase() {
-    when(liveState.getCurrentAcquisitionPhase()).thenReturn(AcquisitionPhase.START_NAME_NODES);
+    when(liveState.getCurrentAcquisitionPhase()).thenReturn(AcquisitionPhase.START_MASTER_NODES);
     when(persistenceStore.getPrimaryNodeTaskNames()).thenReturn(new HashMap<String, String>());
 
     scheduler.resourceOffers(driver, Lists.newArrayList(createTestOffer(0)));
@@ -162,7 +158,7 @@ public class TestScheduler {
 
   @Test
   public void declinesAnyOffersPastWhatItNeeds() {
-    when(liveState.getCurrentAcquisitionPhase()).thenReturn(AcquisitionPhase.DATA_NODES);
+    when(liveState.getCurrentAcquisitionPhase()).thenReturn(AcquisitionPhase.SLAVE_NODES);
 
     scheduler.resourceOffers(driver,
         Lists.newArrayList(
@@ -177,7 +173,7 @@ public class TestScheduler {
 
   @Test
   public void launchesDataNodesWhenInDatanodesPhase() {
-    when(liveState.getCurrentAcquisitionPhase()).thenReturn(AcquisitionPhase.DATA_NODES);
+    when(liveState.getCurrentAcquisitionPhase()).thenReturn(AcquisitionPhase.SLAVE_NODES);
 
     scheduler.resourceOffers(driver,
         Lists.newArrayList(
@@ -192,7 +188,7 @@ public class TestScheduler {
 
   @Test
   public void removesTerminalTasksFromLiveState() {
-    when(liveState.getCurrentAcquisitionPhase()).thenReturn(AcquisitionPhase.DATA_NODES);
+    when(liveState.getCurrentAcquisitionPhase()).thenReturn(AcquisitionPhase.SLAVE_NODES);
 
     scheduler.statusUpdate(driver, createTaskStatus(createTaskId("0"),
         Protos.TaskState.TASK_FAILED));
@@ -209,7 +205,7 @@ public class TestScheduler {
 
   @Test
   public void declinesOffersWithNotEnoughResources() {
-    when(liveState.getCurrentAcquisitionPhase()).thenReturn(AcquisitionPhase.DATA_NODES);
+    when(liveState.getCurrentAcquisitionPhase()).thenReturn(AcquisitionPhase.SLAVE_NODES);
     Protos.Offer offer = createTestOfferWithResources(0, 0.1, 64);
 
     scheduler.resourceOffers(driver, Lists.newArrayList(offer));

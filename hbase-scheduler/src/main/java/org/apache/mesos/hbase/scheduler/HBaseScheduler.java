@@ -81,7 +81,7 @@ public class HBaseScheduler implements org.apache.mesos.Scheduler, Runnable {
     boolean removeFrameworkId = message.contains("re-register");
     suicide(removeFrameworkId);
   }
-  
+
   /**
     * Exits the JVM process, optionally deleting Marathon's FrameworkID
     * from the backing persistence store.
@@ -93,14 +93,14 @@ public class HBaseScheduler implements org.apache.mesos.Scheduler, Runnable {
     * the scheduler may never re-register with the saved FrameworkID until
     * the leading Mesos master process is killed.
     */
-  private void suicide(Boolean removeFrameworkId)  {
-    if (removeFrameworkId) 
+  private void suicide(Boolean removeFrameworkId) {
+    if (removeFrameworkId)
     {
-        persistenceStore.setFrameworkId(null);
-        System.exit(9);
+      persistenceStore.setFrameworkId(null);
+      System.exit(9);
     }
   }
-  
+
   @Override
   public void executorLost(SchedulerDriver driver, ExecutorID executorID, SlaveID slaveID,
       int status) {
@@ -171,36 +171,15 @@ public class HBaseScheduler implements org.apache.mesos.Scheduler, Runnable {
       switch (liveState.getCurrentAcquisitionPhase()) {
         case RECONCILING_TASKS:
           break;
-        case START_NAME_NODES:
+        case START_MASTER_NODES:
           if (liveState.getNameNodeSize() == HBaseConstants.TOTAL_MASTER_NODES) {
             // TODO (elingg) move the reload to correctCurrentPhase and make it idempotent
             reloadConfigsOnAllRunningTasks(driver);
             correctCurrentPhase();
           }
           break;
-        case FORMAT_NAME_NODES:
-          if (!liveState.isNameNode1Initialized()
-              && !liveState.isNameNode2Initialized()) {
-            dnsResolver.sendMessageAfterNNResolvable(driver,
-                liveState.getFirstNameNodeTaskId(),
-                liveState.getFirstNameNodeSlaveId(),
-                HBaseConstants.MASTER_NODE_INIT_MESSAGE);
-          } else if (!liveState.isNameNode1Initialized()) {
-            dnsResolver.sendMessageAfterNNResolvable(driver,
-                liveState.getFirstNameNodeTaskId(),
-                liveState.getFirstNameNodeSlaveId(),
-                HBaseConstants.MASTER_NODE_BOOTSTRAP_MESSAGE);
-          } else if (!liveState.isNameNode2Initialized()) {
-            dnsResolver.sendMessageAfterNNResolvable(driver,
-                liveState.getSecondNameNodeTaskId(),
-                liveState.getSecondNameNodeSlaveId(),
-                HBaseConstants.MASTER_NODE_BOOTSTRAP_MESSAGE);
-          } else {
-            correctCurrentPhase();
-          }
-          break;
         // TODO (elingg) add a configurable number of data nodes
-        case DATA_NODES:
+        case SLAVE_NODES:
           break;
       }
     } else {
@@ -224,18 +203,15 @@ public class HBaseScheduler implements org.apache.mesos.Scheduler, Runnable {
             log.info("Declining offers while reconciling tasks");
             driver.declineOffer(offer.getId());
             break;
-          case START_NAME_NODES:
+          case START_MASTER_NODES:
             if (tryToLaunchMasterNode(driver, offer)) {
               acceptedOffer = true;
             } else {
               driver.declineOffer(offer.getId());
             }
             break;
-          case FORMAT_NAME_NODES:
-            driver.declineOffer(offer.getId());
-            break;
-          case DATA_NODES:
-            if (tryToLaunchDataNode(driver, offer)) {
+          case SLAVE_NODES:
+            if (tryToLaunchSlaveNode(driver, offer)) {
               acceptedOffer = true;
             } else {
               driver.declineOffer(offer.getId());
@@ -375,87 +351,87 @@ public class HBaseScheduler implements org.apache.mesos.Scheduler, Runnable {
         .setExecutorId(ExecutorID.newBuilder().setValue("executor." + taskIdName).build())
         .addAllResources(resources)
         .setCommand(CommandInfo
+            .newBuilder()
+            .addAllUris(Arrays.asList(CommandInfo.URI
                 .newBuilder()
-                .addAllUris(Arrays.asList(CommandInfo.URI
-                            .newBuilder()
-                            .setValue(String.format("http://%s:%d/%s",
-                                    hbaseFrameworkConfig.getFrameworkHostAddress(),
-                                    confServerPort,
-                                    HBaseConstants.HBASE_BINARY_FILE_NAME))
-                            .build(),
-                        CommandInfo.URI
-                            .newBuilder()
-                            .setValue(String.format("http://%s:%d/%s",
-                                    hbaseFrameworkConfig.getFrameworkHostAddress(),
-                                    confServerPort,
-                                    HBaseConstants.HBASE_CONFIG_FILE_NAME))
-                            .build(),
-                        CommandInfo.URI
-                            .newBuilder()
-                            .setValue(hbaseFrameworkConfig.getJreUrl())
-                            .build()))
-                .setEnvironment(Environment
+                .setValue(String.format("http://%s:%d/%s",
+                    hbaseFrameworkConfig.getFrameworkHostAddress(),
+                    confServerPort,
+                    HBaseConstants.HBASE_BINARY_FILE_NAME))
+                .build(),
+                CommandInfo.URI
+                    .newBuilder()
+                    .setValue(String.format("http://%s:%d/%s",
+                        hbaseFrameworkConfig.getFrameworkHostAddress(),
+                        confServerPort,
+                        HBaseConstants.HBASE_CONFIG_FILE_NAME))
+                    .build(),
+                CommandInfo.URI
+                    .newBuilder()
+                    .setValue(hbaseFrameworkConfig.getJreUrl())
+                    .build()))
+            .setEnvironment(Environment
+                .newBuilder()
+                .addAllVariables(Arrays.asList(Environment.Variable.newBuilder()
+                    .setName("LD_LIBRARY_PATH")
+                    .setValue(hbaseFrameworkConfig.getLdLibraryPath()).build(),
+                    Environment.Variable.newBuilder()
+                        .setName("HADOOP_OPTS")
+                        .setValue(hbaseFrameworkConfig.getJvmOpts()).build(),
+                    Environment.Variable
                         .newBuilder()
-                        .addAllVariables(Arrays.asList(Environment.Variable.newBuilder()
-                                    .setName("LD_LIBRARY_PATH")
-                                    .setValue(hbaseFrameworkConfig.getLdLibraryPath()).build(),
-                                Environment.Variable.newBuilder()
-                                    .setName("HADOOP_OPTS")
-                                    .setValue(hbaseFrameworkConfig.getJvmOpts()).build(),
-                                Environment.Variable
-                                    .newBuilder()
-                                    .setName("HADOOP_HEAPSIZE")
-                                    .setValue(String.format("%d", hbaseFrameworkConfig.getHadoopHeapSize()))
-                                    .build(),
-                                Environment.Variable
-                                    .newBuilder()
-                                    .setName("HADOOP_NAMENODE_OPTS")
-                                    .setValue("-Xmx" + hbaseFrameworkConfig.getMasterNodeHeapSize()
-                                            + "m -Xms" + hbaseFrameworkConfig.getMasterNodeHeapSize()
-                                            + "m").build(),
-                                Environment.Variable
-                                    .newBuilder()
-                                    .setName("HADOOP_DATANODE_OPTS")
-                                    .setValue("-Xmx" + hbaseFrameworkConfig.getSlaveNodeHeapSize()
-                                            + "m -Xms" + hbaseFrameworkConfig.getSlaveNodeHeapSize()
-                                            + "m").build(),
-                                Environment.Variable.newBuilder()
-                                    .setName("EXECUTOR_OPTS")
-                                    .setValue("-Xmx" + hbaseFrameworkConfig.getExecutorHeap()
-                                        + "m -Xms" + hbaseFrameworkConfig.getExecutorHeap() + "m")
-                                    .build())))
-                .setValue(cmd).build())
+                        .setName("HADOOP_HEAPSIZE")
+                        .setValue(String.format("%d", hbaseFrameworkConfig.getHadoopHeapSize()))
+                        .build(),
+                    Environment.Variable
+                        .newBuilder()
+                        .setName("HADOOP_NAMENODE_OPTS")
+                        .setValue("-Xmx" + hbaseFrameworkConfig.getMasterNodeHeapSize()
+                            + "m -Xms" + hbaseFrameworkConfig.getMasterNodeHeapSize()
+                            + "m").build(),
+                    Environment.Variable
+                        .newBuilder()
+                        .setName("HADOOP_DATANODE_OPTS")
+                        .setValue("-Xmx" + hbaseFrameworkConfig.getSlaveNodeHeapSize()
+                            + "m -Xms" + hbaseFrameworkConfig.getSlaveNodeHeapSize()
+                            + "m").build(),
+                    Environment.Variable.newBuilder()
+                        .setName("EXECUTOR_OPTS")
+                        .setValue("-Xmx" + hbaseFrameworkConfig.getExecutorHeap()
+                            + "m -Xms" + hbaseFrameworkConfig.getExecutorHeap() + "m")
+                        .build())))
+            .setValue(cmd).build())
         .build();
   }
 
   private List<Resource> getExecutorResources() {
     return Arrays.asList(Resource.newBuilder()
-            .setName("cpus")
-            .setType(Value.Type.SCALAR)
-            .setScalar(Value.Scalar.newBuilder()
-                .setValue(hbaseFrameworkConfig.getExecutorCpus()).build())
-            .setRole(hbaseFrameworkConfig.getHbaseRole())
-            .build(),
+        .setName("cpus")
+        .setType(Value.Type.SCALAR)
+        .setScalar(Value.Scalar.newBuilder()
+            .setValue(hbaseFrameworkConfig.getExecutorCpus()).build())
+        .setRole(hbaseFrameworkConfig.getHbaseRole())
+        .build(),
         Resource
             .newBuilder()
             .setName("mem")
             .setType(Value.Type.SCALAR)
             .setScalar(Value.Scalar
-                    .newBuilder()
-                    .setValue(hbaseFrameworkConfig.getExecutorHeap()
-                            * hbaseFrameworkConfig.getJvmOverhead()).build())
+                .newBuilder()
+                .setValue(hbaseFrameworkConfig.getExecutorHeap()
+                    * hbaseFrameworkConfig.getJvmOverhead()).build())
             .setRole(hbaseFrameworkConfig.getHbaseRole())
             .build());
   }
 
   private List<Resource> getTaskResources(String taskName) {
     return Arrays.asList(Resource.newBuilder()
-            .setName("cpus")
-            .setType(Value.Type.SCALAR)
-            .setScalar(Value.Scalar.newBuilder()
-                .setValue(hbaseFrameworkConfig.getTaskCpus(taskName)).build())
-            .setRole(hbaseFrameworkConfig.getHbaseRole())
-            .build(),
+        .setName("cpus")
+        .setType(Value.Type.SCALAR)
+        .setScalar(Value.Scalar.newBuilder()
+            .setValue(hbaseFrameworkConfig.getTaskCpus(taskName)).build())
+        .setRole(hbaseFrameworkConfig.getHbaseRole())
+        .build(),
         Resource.newBuilder()
             .setName("mem")
             .setType(Value.Type.SCALAR)
@@ -465,30 +441,34 @@ public class HBaseScheduler implements org.apache.mesos.Scheduler, Runnable {
             .setRole(hbaseFrameworkConfig.getHbaseRole())
             .build());
   }
-  
+
   private boolean acceptOffer(Offer offer, String nodeType, double cpu, int memory)
   {
-      if (offerNotEnoughCpu(offer, cpu)) 
-      {      
-        log.info(nodeType+" node offer does not have enough cpu.\n Required "+cpu+". (NameNodeCpus)");
-        return false;
-      }
-      else if(offerNotEnoughMemory(offer, memory))
-      {
-        double requiredMem = (memory * hbaseFrameworkConfig.getJvmOverhead()) + (hbaseFrameworkConfig.getExecutorHeap() * hbaseFrameworkConfig.getJvmOverhead());
-        String memLog = "Required "+requiredMem+" mem ("+nodeType+"NodeHeapSize * jvmOverhead) + (executorHeap * jvmOverhead)";  
-        log.info(nodeType+" node offer does not have enough memory.\n"+memLog);
-        return false;
-      } else {
-          return true;
-      }
+    if (offerNotEnoughCpu(offer, cpu))
+    {
+      log.info(nodeType + " node offer does not have enough cpu.\n Required " + cpu
+          + ". (NameNodeCpus)");
+      return false;
+    }
+    else if (offerNotEnoughMemory(offer, memory))
+    {
+      double requiredMem = (memory * hbaseFrameworkConfig.getJvmOverhead())
+          + (hbaseFrameworkConfig.getExecutorHeap() * hbaseFrameworkConfig.getJvmOverhead());
+      String memLog = "Required " + requiredMem + " mem (" + nodeType
+          + "NodeHeapSize * jvmOverhead) + (executorHeap * jvmOverhead)";
+      log.info(nodeType + " node offer does not have enough memory.\n" + memLog);
+      return false;
+    } else {
+      return true;
+    }
   }
-  
-  private boolean tryToLaunchMasterNode(SchedulerDriver driver, Offer offer) 
+
+  private boolean tryToLaunchMasterNode(SchedulerDriver driver, Offer offer)
   {
-    if(!acceptOffer(offer, "master", hbaseFrameworkConfig.getMasterNodeCpus(), hbaseFrameworkConfig.getMasterNodeHeapSize()))
-        return false;
-    
+    if (!acceptOffer(offer, "master", hbaseFrameworkConfig.getMasterNodeCpus(),
+        hbaseFrameworkConfig.getMasterNodeHeapSize()))
+      return false;
+
     boolean launch = false;
     List<String> deadNameNodes = persistenceStore.getDeadNameNodes();
 
@@ -515,9 +495,10 @@ public class HBaseScheduler implements org.apache.mesos.Scheduler, Runnable {
     return false;
   }
 
-  private boolean tryToLaunchDataNode(SchedulerDriver driver, Offer offer) {
-    if(!acceptOffer(offer, "slave", hbaseFrameworkConfig.getMasterNodeCpus(), hbaseFrameworkConfig.getMasterNodeHeapSize()))
-        return false;
+  private boolean tryToLaunchSlaveNode(SchedulerDriver driver, Offer offer) {
+    if (!acceptOffer(offer, "slave", hbaseFrameworkConfig.getMasterNodeCpus(),
+        hbaseFrameworkConfig.getMasterNodeHeapSize()))
+      return false;
 
     boolean launch = false;
     List<String> deadDataNodes = persistenceStore.getDeadDataNodes();
@@ -585,12 +566,9 @@ public class HBaseScheduler implements org.apache.mesos.Scheduler, Runnable {
 
   private void correctCurrentPhase() {
     if (liveState.getNameNodeSize() < HBaseConstants.TOTAL_MASTER_NODES) {
-      liveState.transitionTo(AcquisitionPhase.START_NAME_NODES);
-    } else if (!liveState.isNameNode1Initialized()
-        || !liveState.isNameNode2Initialized()) {
-      liveState.transitionTo(AcquisitionPhase.FORMAT_NAME_NODES);
+      liveState.transitionTo(AcquisitionPhase.START_MASTER_NODES);
     } else {
-      liveState.transitionTo(AcquisitionPhase.DATA_NODES);
+      liveState.transitionTo(AcquisitionPhase.SLAVE_NODES);
     }
   }
 
@@ -603,7 +581,7 @@ public class HBaseScheduler implements org.apache.mesos.Scheduler, Runnable {
     }
     return false;
   }
-  
+
   private boolean offerNotEnoughMemory(Offer offer, int mem) {
     for (Resource offerResource : offer.getResourcesList()) {
       if (offerResource.getName().equals("mem") &&

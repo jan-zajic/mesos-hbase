@@ -13,68 +13,6 @@ public class TestLiveState {
   private LiveState liveState;
 
   @Test
-  public void getsNameNodeSize() {
-    liveState.updateTaskForStatus(createTaskStatus("journalnode", 1, ""));
-    liveState.updateTaskForStatus(createTaskStatus(HBaseConstants.MASTER_NODE_TASKID, 1,
-        HBaseConstants.MASTER_NODE_INIT_MESSAGE));
-    liveState.updateTaskForStatus(createTaskStatus(HBaseConstants.MASTER_NODE_TASKID, 2,
-        HBaseConstants.MASTER_NODE_BOOTSTRAP_MESSAGE));
-    liveState.updateTaskForStatus(createTaskStatus("datanode", 1, ""));
-
-    assertEquals(2, liveState.getNameNodeSize());
-  }
-
-  @Test
-  public void getsFirstNamenodeTaskId() {
-    assertEquals(null, liveState.getFirstNameNodeTaskId());
-    liveState.updateTaskForStatus(createTaskStatus("journalnode", 1, ""));
-    liveState.updateTaskForStatus(createTaskStatus(HBaseConstants.MASTER_NODE_TASKID, 1,
-        HBaseConstants.MASTER_NODE_INIT_MESSAGE));
-    liveState.updateTaskForStatus(createTaskStatus(HBaseConstants.MASTER_NODE_TASKID, 2,
-        HBaseConstants.MASTER_NODE_BOOTSTRAP_MESSAGE));
-    assertEquals(
-        Protos.TaskID.newBuilder().setValue(HBaseConstants.MASTER_NODE_TASKID + ".1").build(),
-        liveState.getFirstNameNodeTaskId());
-  }
-
-  @Test
-  public void getsSecondNamenodeTaskId() {
-    assertEquals(null, liveState.getSecondNameNodeTaskId());
-    liveState.updateTaskForStatus(createTaskStatus("journalnode", 1, ""));
-    liveState.updateTaskForStatus(createTaskStatus(HBaseConstants.MASTER_NODE_TASKID, 1,
-        HBaseConstants.MASTER_NODE_INIT_MESSAGE));
-    assertEquals(null, liveState.getSecondNameNodeTaskId());
-    liveState.updateTaskForStatus(createTaskStatus(HBaseConstants.MASTER_NODE_TASKID, 2,
-        HBaseConstants.MASTER_NODE_BOOTSTRAP_MESSAGE));
-    assertEquals(
-        Protos.TaskID.newBuilder().setValue(HBaseConstants.MASTER_NODE_TASKID + ".2").build(),
-        liveState.getSecondNameNodeTaskId());
-  }
-
-  @Test
-  public void getsFirstNamenodeSlaveId() {
-    assertEquals(null, liveState.getFirstNameNodeSlaveId());
-    liveState.updateTaskForStatus(createTaskStatus("journalnode", 1, ""));
-    liveState.updateTaskForStatus(createTaskStatus(HBaseConstants.MASTER_NODE_TASKID, 1,
-        HBaseConstants.MASTER_NODE_INIT_MESSAGE));
-    liveState.updateTaskForStatus(createTaskStatus(HBaseConstants.MASTER_NODE_TASKID, 2,
-        HBaseConstants.MASTER_NODE_BOOTSTRAP_MESSAGE));
-    assertEquals("slave.1", liveState.getFirstNameNodeSlaveId().getValue());
-  }
-
-  @Test
-  public void getsSecondNamenodeSlaveId() {
-    assertEquals(null, liveState.getSecondNameNodeSlaveId());
-    liveState.updateTaskForStatus(createTaskStatus("journalnode", 2, ""));
-    liveState.updateTaskForStatus(createTaskStatus(HBaseConstants.MASTER_NODE_TASKID, 1,
-        HBaseConstants.MASTER_NODE_INIT_MESSAGE));
-    assertEquals(null, liveState.getSecondNameNodeSlaveId());
-    liveState.updateTaskForStatus(createTaskStatus(HBaseConstants.MASTER_NODE_TASKID, 2,
-        HBaseConstants.MASTER_NODE_BOOTSTRAP_MESSAGE));
-    assertEquals("slave.2", liveState.getSecondNameNodeSlaveId().getValue());
-  }
-
-  @Test
   public void addsAndRemovesStagingTasks() {
     liveState.addStagingTask(createTaskInfo("journalnode").getTaskId());
     assertEquals(1, liveState.getStagingTasksSize());

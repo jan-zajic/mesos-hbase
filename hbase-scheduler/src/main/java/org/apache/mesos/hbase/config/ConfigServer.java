@@ -31,7 +31,7 @@ import org.apache.mesos.hbase.util.HBaseConstants;
  * This is the HTTP service which allows executors to fetch the configuration for hbase-site.xml.
  */
 public class ConfigServer {
-  
+
   private final Log log = LogFactory.getLog(ConfigServer.class);
 
   private Server server;
@@ -74,7 +74,7 @@ public class ConfigServer {
   }
 
   private class ServeHdfsConfigHandler extends AbstractHandler {
-      
+
     public synchronized void handle(String target, Request baseRequest, HttpServletRequest request,
       HttpServletResponse response) throws IOException {
 
@@ -119,6 +119,5 @@ public class ConfigServer {
       baseRequest.setHandled(true);
       response.getWriter().println(content);
     }
-
   }
 }
