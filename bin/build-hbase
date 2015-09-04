@@ -75,6 +75,7 @@ cp -R $BUILD_CACHE_DIR/$HBASE_DIR/hbase-webapps $BUILD_CACHE_DIR/$EXECUTOR
 echo "Copying build output into $BUILD_CACHE_DIR/$DIST"
 cd $BUILD_CACHE_DIR/$EXECUTOR
 cp $PROJ_DIR/bin/* bin/
+chmod 755 bin/*
 cp $PROJ_DIR/hbase-executor/build/libs/*-uber.jar ./hbase-executor-uber.jar
 cp $PROJ_DIR/conf/* conf/
 cd -
