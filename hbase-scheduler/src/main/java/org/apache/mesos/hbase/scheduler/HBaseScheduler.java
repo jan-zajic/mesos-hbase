@@ -329,7 +329,7 @@ public class HBaseScheduler implements org.apache.mesos.Scheduler, Runnable {
         .setSlaveId(offer.getSlaveId())
         .addAllResources(taskResources)
         .setData(ByteString.copyFromUtf8(
-          String.format("bin/hbase-mesos-%s", taskType)))
+          String.format("hbase/bin/hbase-mesos-%s", taskType)))
         .build();
       tasks.add(task);
 
