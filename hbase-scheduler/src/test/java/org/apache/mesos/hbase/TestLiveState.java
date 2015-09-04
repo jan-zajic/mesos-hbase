@@ -102,7 +102,7 @@ public class TestLiveState {
         .setTaskId(Protos.TaskID.newBuilder().setValue(taskName + "." + "1"))
         .setSlaveId(Protos.SlaveID.newBuilder().setValue("slave.1"))
         .setData(ByteString.copyFromUtf8(
-            String.format("bin/hdfs-mesos-%s", taskName)))
+            String.format("bin/hbase-mesos-%s", taskName)))
         .build();
   }
 }

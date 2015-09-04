@@ -208,26 +208,26 @@ public abstract class AbstractNodeExecutor implements Executor {
     // Find config URI
     String configUri = "";
     for (CommandInfo.URI uri : executorInfo.getCommand().getUrisList()) {
-      if (uri.getValue().contains("hdfs-site.xml")) {
+      if (uri.getValue().contains("hbase-site.xml")) {
         configUri = uri.getValue();
       }
     }
     if (configUri.isEmpty()) {
-      log.error("Couldn't find hdfs-site.xml URI");
+      log.error("Couldn't find hbase-site.xml URI");
       return;
     }
     try {
-      log.info(String.format("Reloading hdfs-site.xml from %s", configUri));
+      log.info(String.format("Reloading hbase-site.xml from %s", configUri));
       ProcessBuilder processBuilder = new ProcessBuilder("sh", "-c",
-        String.format("curl -o hdfs-site.xml %s && mv hdfs-site.xml etc/hadoop/", configUri));
+        String.format("curl -o hbase-site.xml %s && mv hbase-site.xml conf/", configUri));
       Process process = processBuilder.start();
       //TODO(nicgrayson) check if the config has changed
       redirectProcess(process);
       int exitCode = process.waitFor();
       if (exitCode == 0) {
-        log.info("Finished reloading hdfs-site.xml, exited with status " + exitCode);
+        log.info("Finished reloading hbase-site.xml, exited with status " + exitCode);
       } else {
-        log.error("Error reloading hdfs-site.xml.");
+        log.error("Error reloading hbase-site.xml.");
       }
     } catch (InterruptedException | IOException e) {
       log.error("Caught exception", e);

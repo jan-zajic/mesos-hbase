@@ -367,7 +367,7 @@ public class HBaseScheduler implements org.apache.mesos.Scheduler, Runnable {
         + "else echo $JAVA_HOME/bin/java; fi` "
         + "$HADOOP_OPTS "
         + "$EXECUTOR_OPTS "
-        + "-cp lib/*.jar org.apache.mesos.hbase.executor." + executorName;
+        + "-cp \"lib/*\" org.apache.mesos.hbase.executor." + executorName;
 
     return ExecutorInfo
         .newBuilder()

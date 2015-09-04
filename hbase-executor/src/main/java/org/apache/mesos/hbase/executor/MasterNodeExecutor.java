@@ -113,7 +113,7 @@ public class MasterNodeExecutor extends AbstractNodeExecutor {
           log.error(errorMsg);
           throw new ExecutorException(errorMsg);
         }
-        runCommand(driver, masterNodeTask, "bin/hdfs-mesos-namenode " + messageStr);
+        runCommand(driver, masterNodeTask, "bin/hbase-mesos-masternode " + messageStr);
       }
       startProcess(driver, masterNodeTask);
       driver.sendStatusUpdate(TaskStatus.newBuilder()
