@@ -329,7 +329,7 @@ public class HBaseScheduler implements org.apache.mesos.Scheduler, Runnable {
         .setSlaveId(offer.getSlaveId())
         .addAllResources(taskResources)
         .setData(ByteString.copyFromUtf8(
-          String.format("hbase/bin/hbase-mesos-%s", taskType)))
+          String.format("bin/hbase-mesos-%s", taskType)))
         .build();
       tasks.add(task);
 
@@ -367,7 +367,7 @@ public class HBaseScheduler implements org.apache.mesos.Scheduler, Runnable {
         + "else echo $JAVA_HOME/bin/java; fi` "
         + "$HADOOP_OPTS "
         + "$EXECUTOR_OPTS "
-        + "-cp \"lib/*\" org.apache.mesos.hbase.executor." + executorName;
+        + "-cp \"hbase-executor-uber.jar\" org.apache.mesos.hbase.executor." + executorName;
 
     return ExecutorInfo
         .newBuilder()

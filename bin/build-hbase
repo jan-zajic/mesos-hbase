@@ -63,23 +63,19 @@ else
   mkdir -p $BUILD_CACHE_DIR/$EXECUTOR
 fi
 
-mkdir -p $BUILD_CACHE_DIR/$EXECUTOR/hbase
-mkdir $BUILD_CACHE_DIR/$EXECUTOR/hbase/lib
+mkdir -p $BUILD_CACHE_DIR/$EXECUTOR/lib
 
 # Copy to dist
 echo "Copying required hbase dependencies into $BUILD_DIR/$EXECUTOR"
-cp -R $BUILD_CACHE_DIR/$HBASE_DIR/bin $BUILD_CACHE_DIR/$EXECUTOR/hbase
-cp -R $BUILD_CACHE_DIR/$HBASE_DIR/conf $BUILD_CACHE_DIR/$EXECUTOR/hbase
-cp -R $BUILD_CACHE_DIR/$HBASE_DIR/lib/*.jar $BUILD_CACHE_DIR/$EXECUTOR/hbase/lib/
-cp -R $BUILD_CACHE_DIR/$HBASE_DIR/hbase-webapps $BUILD_CACHE_DIR/$EXECUTOR/hbase/
+cp -R $BUILD_CACHE_DIR/$HBASE_DIR/bin $BUILD_CACHE_DIR/$EXECUTOR
+cp -R $BUILD_CACHE_DIR/$HBASE_DIR/conf $BUILD_CACHE_DIR/$EXECUTOR
+cp -R $BUILD_CACHE_DIR/$HBASE_DIR/lib/*.jar $BUILD_CACHE_DIR/$EXECUTOR/lib/
+cp -R $BUILD_CACHE_DIR/$HBASE_DIR/hbase-webapps $BUILD_CACHE_DIR/$EXECUTOR
 
 echo "Copying build output into $BUILD_CACHE_DIR/$DIST"
 cd $BUILD_CACHE_DIR/$EXECUTOR
-mkdir -p bin
-mkdir -p lib
-mkdir -p conf
 cp $PROJ_DIR/bin/* bin/
-cp $PROJ_DIR/hbase-executor/build/libs/*-uber.jar lib/
+cp $PROJ_DIR/hbase-executor/build/libs/*-uber.jar ./hbase-executor-uber.jar
 cp $PROJ_DIR/conf/* conf/
 cd -
 
