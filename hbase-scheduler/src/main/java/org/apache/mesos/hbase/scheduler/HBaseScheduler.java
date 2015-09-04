@@ -44,7 +44,7 @@ import org.apache.mesos.hbase.config.HBaseFrameworkConfig;
 import org.apache.mesos.hbase.util.HBaseConstants;
 
 /**
- * HDFS Mesos Framework Scheduler class implementation.
+ * HBase Mesos Framework Scheduler class implementation.
  */
 public class HBaseScheduler implements org.apache.mesos.Scheduler, Runnable {
   // TODO (elingg) remove as much logic as possible from Scheduler to clean up code
@@ -52,19 +52,19 @@ public class HBaseScheduler implements org.apache.mesos.Scheduler, Runnable {
 
   private static final int SECONDS_FROM_MILLIS = 1000;
 
-  private final HBaseFrameworkConfig hdfsFrameworkConfig;
+  private final HBaseFrameworkConfig hbaseFrameworkConfig;
   private final LiveState liveState;
   private final IPersistentStateStore persistenceStore;
   private final DnsResolver dnsResolver;
 
   @Inject
-  public HBaseScheduler(HBaseFrameworkConfig hdfsFrameworkConfig,
+  public HBaseScheduler(HBaseFrameworkConfig hbaseFrameworkConfig,
       LiveState liveState, IPersistentStateStore persistenceStore) {
 
-    this.hdfsFrameworkConfig = hdfsFrameworkConfig;
+    this.hbaseFrameworkConfig = hbaseFrameworkConfig;
     this.liveState = liveState;
     this.persistenceStore = persistenceStore;
-    this.dnsResolver = new DnsResolver(this, hdfsFrameworkConfig);
+    this.dnsResolver = new DnsResolver(this, hbaseFrameworkConfig);
   }
 
   @Override
@@ -254,10 +254,10 @@ public class HBaseScheduler implements org.apache.mesos.Scheduler, Runnable {
   @Override
   public void run() {
     FrameworkInfo.Builder frameworkInfo = FrameworkInfo.newBuilder()
-        .setName(hdfsFrameworkConfig.getFrameworkName())
-        .setFailoverTimeout(hdfsFrameworkConfig.getFailoverTimeout())
-        .setUser(hdfsFrameworkConfig.getHdfsUser())
-        .setRole(hdfsFrameworkConfig.getHdfsRole())
+        .setName(hbaseFrameworkConfig.getFrameworkName())
+        .setFailoverTimeout(hbaseFrameworkConfig.getFailoverTimeout())
+        .setUser(hbaseFrameworkConfig.getHbaseUser())
+        .setRole(hbaseFrameworkConfig.getHbaseRole())
         .setCheckpoint(true);
 
     try {
@@ -271,7 +271,7 @@ public class HBaseScheduler implements org.apache.mesos.Scheduler, Runnable {
       throw new SchedulerException(msg, e);
     }
 
-    registerFramework(this, frameworkInfo.build(), hdfsFrameworkConfig.getMesosMasterUri());
+    registerFramework(this, frameworkInfo.build(), hbaseFrameworkConfig.getMesosMasterUri());
   }
 
   private void registerFramework(HBaseScheduler sched, FrameworkInfo fInfo, String masterUri) {
@@ -287,11 +287,11 @@ public class HBaseScheduler implements org.apache.mesos.Scheduler, Runnable {
   }
 
   private Credential getCredential() {
-    if (hdfsFrameworkConfig.cramCredentialsEnabled()) {
+    if (hbaseFrameworkConfig.cramCredentialsEnabled()) {
       try {
         Credential.Builder credentialBuilder = Credential.newBuilder()
-            .setPrincipal(hdfsFrameworkConfig.getPrincipal())
-            .setSecret(ByteString.copyFrom(hdfsFrameworkConfig.getSecret().getBytes("UTF-8")));
+            .setPrincipal(hbaseFrameworkConfig.getPrincipal())
+            .setSecret(ByteString.copyFrom(hbaseFrameworkConfig.getSecret().getBytes("UTF-8")));
 
         return credentialBuilder.build();
 
@@ -329,7 +329,7 @@ public class HBaseScheduler implements org.apache.mesos.Scheduler, Runnable {
         .setSlaveId(offer.getSlaveId())
         .addAllResources(taskResources)
         .setData(ByteString.copyFromUtf8(
-          String.format("bin/hdfs-mesos-%s", taskType)))
+          String.format("bin/hbase-mesos-%s", taskType)))
         .build();
       tasks.add(task);
 
@@ -359,132 +359,117 @@ public class HBaseScheduler implements org.apache.mesos.Scheduler, Runnable {
 
   private ExecutorInfo createExecutor(String taskIdName, String nodeName, String executorName,
       List<Resource> resources) {
-    int confServerPort = hdfsFrameworkConfig.getConfigServerPort();
+    int confServerPort = hbaseFrameworkConfig.getConfigServerPort();
 
-    String cmd = "export JAVA_HOME=$MESOS_DIRECTORY/" + hdfsFrameworkConfig.getJreVersion()
-        + " && env ; cd hdfs-mesos-* && "
+    String cmd = "export JAVA_HOME=$MESOS_DIRECTORY/" + hbaseFrameworkConfig.getJreVersion()
+        + " && env ; cd hbase-mesos-* && "
         + "exec `if [ -z \"$JAVA_HOME\" ]; then echo java; "
         + "else echo $JAVA_HOME/bin/java; fi` "
         + "$HADOOP_OPTS "
         + "$EXECUTOR_OPTS "
-        + "-cp lib/*.jar org.apache.mesos.hdfs.executor." + executorName;
+        + "-cp lib/*.jar org.apache.mesos.hbase.executor." + executorName;
 
     return ExecutorInfo
         .newBuilder()
         .setName(nodeName + " executor")
         .setExecutorId(ExecutorID.newBuilder().setValue("executor." + taskIdName).build())
         .addAllResources(resources)
-        .setCommand(
-            CommandInfo
+        .setCommand(CommandInfo
                 .newBuilder()
-                .addAllUris(
-                    Arrays.asList(
-                        CommandInfo.URI
+                .addAllUris(Arrays.asList(CommandInfo.URI
                             .newBuilder()
-                            .setValue(
-                                String.format("http://%s:%d/%s",
-                                    hdfsFrameworkConfig.getFrameworkHostAddress(),
+                            .setValue(String.format("http://%s:%d/%s",
+                                    hbaseFrameworkConfig.getFrameworkHostAddress(),
                                     confServerPort,
-                                    HBaseConstants.HDFS_BINARY_FILE_NAME))
+                                    HBaseConstants.HBASE_BINARY_FILE_NAME))
                             .build(),
                         CommandInfo.URI
                             .newBuilder()
-                            .setValue(
-                                String.format("http://%s:%d/%s",
-                                    hdfsFrameworkConfig.getFrameworkHostAddress(),
+                            .setValue(String.format("http://%s:%d/%s",
+                                    hbaseFrameworkConfig.getFrameworkHostAddress(),
                                     confServerPort,
-                                    HBaseConstants.HDFS_CONFIG_FILE_NAME))
+                                    HBaseConstants.HBASE_CONFIG_FILE_NAME))
                             .build(),
                         CommandInfo.URI
                             .newBuilder()
-                            .setValue(hdfsFrameworkConfig.getJreUrl())
+                            .setValue(hbaseFrameworkConfig.getJreUrl())
                             .build()))
-                .setEnvironment(
-                    Environment
+                .setEnvironment(Environment
                         .newBuilder()
-                        .addAllVariables(
-                            Arrays.asList(
-                                Environment.Variable.newBuilder()
+                        .addAllVariables(Arrays.asList(Environment.Variable.newBuilder()
                                     .setName("LD_LIBRARY_PATH")
-                                    .setValue(hdfsFrameworkConfig.getLdLibraryPath()).build(),
+                                    .setValue(hbaseFrameworkConfig.getLdLibraryPath()).build(),
                                 Environment.Variable.newBuilder()
                                     .setName("HADOOP_OPTS")
-                                    .setValue(hdfsFrameworkConfig.getJvmOpts()).build(),
+                                    .setValue(hbaseFrameworkConfig.getJvmOpts()).build(),
                                 Environment.Variable
                                     .newBuilder()
                                     .setName("HADOOP_HEAPSIZE")
-                                    .setValue(
-                                        String.format("%d", hdfsFrameworkConfig.getHadoopHeapSize()))
+                                    .setValue(String.format("%d", hbaseFrameworkConfig.getHadoopHeapSize()))
                                     .build(),
                                 Environment.Variable
                                     .newBuilder()
                                     .setName("HADOOP_NAMENODE_OPTS")
-                                    .setValue(
-                                        "-Xmx" + hdfsFrameworkConfig.getNameNodeHeapSize()
-                                            + "m -Xms" + hdfsFrameworkConfig.getNameNodeHeapSize()
+                                    .setValue("-Xmx" + hbaseFrameworkConfig.getNameNodeHeapSize()
+                                            + "m -Xms" + hbaseFrameworkConfig.getNameNodeHeapSize()
                                             + "m").build(),
                                 Environment.Variable
                                     .newBuilder()
                                     .setName("HADOOP_DATANODE_OPTS")
-                                    .setValue(
-                                        "-Xmx" + hdfsFrameworkConfig.getDataNodeHeapSize()
-                                            + "m -Xms" + hdfsFrameworkConfig.getDataNodeHeapSize()
+                                    .setValue("-Xmx" + hbaseFrameworkConfig.getDataNodeHeapSize()
+                                            + "m -Xms" + hbaseFrameworkConfig.getDataNodeHeapSize()
                                             + "m").build(),
                                 Environment.Variable.newBuilder()
                                     .setName("EXECUTOR_OPTS")
-                                    .setValue("-Xmx" + hdfsFrameworkConfig.getExecutorHeap()
-                                        + "m -Xms" + hdfsFrameworkConfig.getExecutorHeap() + "m")
+                                    .setValue("-Xmx" + hbaseFrameworkConfig.getExecutorHeap()
+                                        + "m -Xms" + hbaseFrameworkConfig.getExecutorHeap() + "m")
                                     .build())))
                 .setValue(cmd).build())
         .build();
   }
 
   private List<Resource> getExecutorResources() {
-    return Arrays.asList(
-        Resource.newBuilder()
+    return Arrays.asList(Resource.newBuilder()
             .setName("cpus")
             .setType(Value.Type.SCALAR)
             .setScalar(Value.Scalar.newBuilder()
-                .setValue(hdfsFrameworkConfig.getExecutorCpus()).build())
-            .setRole(hdfsFrameworkConfig.getHdfsRole())
+                .setValue(hbaseFrameworkConfig.getExecutorCpus()).build())
+            .setRole(hbaseFrameworkConfig.getHbaseRole())
             .build(),
         Resource
             .newBuilder()
             .setName("mem")
             .setType(Value.Type.SCALAR)
-            .setScalar(
-                Value.Scalar
+            .setScalar(Value.Scalar
                     .newBuilder()
-                    .setValue(
-                        hdfsFrameworkConfig.getExecutorHeap()
-                            * hdfsFrameworkConfig.getJvmOverhead()).build())
-            .setRole(hdfsFrameworkConfig.getHdfsRole())
+                    .setValue(hbaseFrameworkConfig.getExecutorHeap()
+                            * hbaseFrameworkConfig.getJvmOverhead()).build())
+            .setRole(hbaseFrameworkConfig.getHbaseRole())
             .build());
   }
 
   private List<Resource> getTaskResources(String taskName) {
-    return Arrays.asList(
-        Resource.newBuilder()
+    return Arrays.asList(Resource.newBuilder()
             .setName("cpus")
             .setType(Value.Type.SCALAR)
             .setScalar(Value.Scalar.newBuilder()
-                .setValue(hdfsFrameworkConfig.getTaskCpus(taskName)).build())
-            .setRole(hdfsFrameworkConfig.getHdfsRole())
+                .setValue(hbaseFrameworkConfig.getTaskCpus(taskName)).build())
+            .setRole(hbaseFrameworkConfig.getHbaseRole())
             .build(),
         Resource.newBuilder()
             .setName("mem")
             .setType(Value.Type.SCALAR)
             .setScalar(Value.Scalar.newBuilder()
-                .setValue(hdfsFrameworkConfig.getTaskHeapSize(taskName) *
-                    hdfsFrameworkConfig.getJvmOverhead()).build())
-            .setRole(hdfsFrameworkConfig.getHdfsRole())
+                .setValue(hbaseFrameworkConfig.getTaskHeapSize(taskName) *
+                    hbaseFrameworkConfig.getJvmOverhead()).build())
+            .setRole(hbaseFrameworkConfig.getHbaseRole())
             .build());
   }
 
   private boolean tryToLaunchMasterNode(SchedulerDriver driver, Offer offer) {
     if (offerNotEnoughResources(offer,
-        (hdfsFrameworkConfig.getNameNodeCpus() + hdfsFrameworkConfig.getZkfcCpus()),
-        (hdfsFrameworkConfig.getNameNodeHeapSize() + hdfsFrameworkConfig.getZkfcHeapSize()))) {
+        (hbaseFrameworkConfig.getNameNodeCpus() + hbaseFrameworkConfig.getZkfcCpus()),
+        (hbaseFrameworkConfig.getNameNodeHeapSize() + hbaseFrameworkConfig.getZkfcHeapSize()))) {
       log.info("namenode offer does not have enough resources.");
       return false;
     }
@@ -516,8 +501,8 @@ public class HBaseScheduler implements org.apache.mesos.Scheduler, Runnable {
   }
 
   private boolean tryToLaunchDataNode(SchedulerDriver driver, Offer offer) {
-    if (offerNotEnoughResources(offer, hdfsFrameworkConfig.getDataNodeCpus(),
-        hdfsFrameworkConfig.getDataNodeHeapSize())) {
+    if (offerNotEnoughResources(offer, hbaseFrameworkConfig.getDataNodeCpus(),
+        hbaseFrameworkConfig.getDataNodeHeapSize())) {
       log.info("datanode offer does not have enough resources");
       return false;
     }
@@ -530,7 +515,7 @@ public class HBaseScheduler implements org.apache.mesos.Scheduler, Runnable {
     if (deadDataNodes.isEmpty()) {
       if (persistenceStore.dataNodeRunningOnSlave(offer.getHostname())
           || persistenceStore.nameNodeRunningOnSlave(offer.getHostname())) {
-        log.info(String.format("Already running hdfs task on %s", offer.getHostname()));
+        log.info(String.format("Already running hbase task on %s", offer.getHostname()));
       } else {
         launch = true;
       }
@@ -577,7 +562,7 @@ public class HBaseScheduler implements org.apache.mesos.Scheduler, Runnable {
   }
 
   private void reloadConfigsOnAllRunningTasks(SchedulerDriver driver) {
-    if (hdfsFrameworkConfig.usingNativeHadoopBinaries()) {
+    if (hbaseFrameworkConfig.usingNativeHadoopBinaries()) {
       return;
     }
     for (Protos.TaskStatus taskStatus : liveState.getRunningTasks().values()) {
@@ -600,12 +585,12 @@ public class HBaseScheduler implements org.apache.mesos.Scheduler, Runnable {
   private boolean offerNotEnoughResources(Offer offer, double cpus, int mem) {
     for (Resource offerResource : offer.getResourcesList()) {
       if (offerResource.getName().equals("cpus") &&
-          cpus + hdfsFrameworkConfig.getExecutorCpus() > offerResource.getScalar().getValue()) {
+          cpus + hbaseFrameworkConfig.getExecutorCpus() > offerResource.getScalar().getValue()) {
         return true;
       }
       if (offerResource.getName().equals("mem") &&
-          (mem * hdfsFrameworkConfig.getJvmOverhead())
-              + (hdfsFrameworkConfig.getExecutorHeap() * hdfsFrameworkConfig.getJvmOverhead())
+          (mem * hbaseFrameworkConfig.getJvmOverhead())
+              + (hbaseFrameworkConfig.getExecutorHeap() * hbaseFrameworkConfig.getJvmOverhead())
               > offerResource.getScalar().getValue()) {
         return true;
       }
@@ -619,7 +604,7 @@ public class HBaseScheduler implements org.apache.mesos.Scheduler, Runnable {
     // different slaves to reregister upon master failover.
     driver.reconcileTasks(Collections.<Protos.TaskStatus>emptyList());
     Timer timer = new Timer();
-    timer.schedule(new ReconcileStateTask(), hdfsFrameworkConfig.getReconciliationTimeout()
+    timer.schedule(new ReconcileStateTask(), hbaseFrameworkConfig.getReconciliationTimeout()
         * SECONDS_FROM_MILLIS);
   }
 

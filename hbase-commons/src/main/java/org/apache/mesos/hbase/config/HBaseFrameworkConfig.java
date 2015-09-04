@@ -62,11 +62,11 @@ public class HBaseFrameworkConfig {
   }
 
   public String getPrincipal() {
-    return getConf().get("mesos.hdfs.principal", "");
+    return getConf().get("mesos.hbase.principal", "");
   }
 
   public String getSecret() {
-    return getConf().get("mesos.hdfs.secret", "");
+    return getConf().get("mesos.hbase.secret", "");
   }
 
   public boolean cramCredentialsEnabled() {
@@ -79,31 +79,31 @@ public class HBaseFrameworkConfig {
   }
 
   public boolean usingMesosDns() {
-    return Boolean.valueOf(getConf().get("mesos.hdfs.mesosdns", "false"));
+    return Boolean.valueOf(getConf().get("mesos.hbase.mesosdns", "false"));
   }
 
   public String getMesosDnsDomain() {
-    return getConf().get("mesos.hdfs.mesosdns.domain", "mesos");
+    return getConf().get("mesos.hbase.mesosdns.domain", "mesos");
   }
 
   public boolean usingNativeHadoopBinaries() {
-    return Boolean.valueOf(getConf().get("mesos.hdfs.native-hadoop-binaries", "false"));
+    return Boolean.valueOf(getConf().get("mesos.hbase.native-hadoop-binaries", "false"));
   }
 
   public String getExecutorPath() {
-    return getConf().get("mesos.hdfs.executor.path", ".");
+    return getConf().get("mesos.hbase.executor.path", ".");
   }
 
   public String getConfigPath() {
-    return getConf().get("mesos.hdfs.config.path", "etc/hadoop/hdfs-site.xml");
+    return getConf().get("mesos.hbase.config.path", "etc/hadoop/hbase-site.xml");
   }
 
   public int getHadoopHeapSize() {
-    return getConf().getInt("mesos.hdfs.hadoop.heap.size", DEFAULT_HADOOP_HEAP_SIZE);
+    return getConf().getInt("mesos.hbase.hadoop.heap.size", DEFAULT_HADOOP_HEAP_SIZE);
   }
 
   public int getDataNodeHeapSize() {
-    return getConf().getInt("mesos.hdfs.datanode.heap.size", DEFAULT_DATANODE_HEAP_SIZE);
+    return getConf().getInt("mesos.hbase.datanode.heap.size", DEFAULT_DATANODE_HEAP_SIZE);
   }
 
   public int getJournalNodeHeapSize() {
@@ -111,11 +111,11 @@ public class HBaseFrameworkConfig {
   }
 
   public int getNameNodeHeapSize() {
-    return getConf().getInt("mesos.hdfs.namenode.heap.size", DEFAULT_NAMENODE_HEAP_SIZE);
+    return getConf().getInt("mesos.hbase.namenode.heap.size", DEFAULT_NAMENODE_HEAP_SIZE);
   }
 
   public int getExecutorHeap() {
-    return getConf().getInt("mesos.hdfs.executor.heap.size", DEFAULT_EXECUTOR_HEAP_SIZE);
+    return getConf().getInt("mesos.hbase.executor.heap.size", DEFAULT_EXECUTOR_HEAP_SIZE);
   }
 
   public int getZkfcHeapSize() {
@@ -146,12 +146,12 @@ public class HBaseFrameworkConfig {
   }
 
   public double getJvmOverhead() {
-    return getConf().getDouble("mesos.hdfs.jvm.overhead", DEFAULT_JVM_OVERHEAD);
+    return getConf().getDouble("mesos.hbase.jvm.overhead", DEFAULT_JVM_OVERHEAD);
   }
 
   public String getJvmOpts() {
     return getConf().get(
-        "mesos.hdfs.jvm.opts", ""
+        "mesos.hbase.jvm.opts", ""
             + "-XX:+UseConcMarkSweepGC "
             + "-XX:+CMSClassUnloadingEnabled "
             + "-XX:+UseTLAB "
@@ -166,7 +166,7 @@ public class HBaseFrameworkConfig {
   }
 
   public double getExecutorCpus() {
-    return getConf().getDouble("mesos.hdfs.executor.cpus", DEFAULT_EXECUTOR_CPUS);
+    return getConf().getDouble("mesos.hbase.executor.cpus", DEFAULT_EXECUTOR_CPUS);
   }
 
   public double getZkfcCpus() {
@@ -174,15 +174,15 @@ public class HBaseFrameworkConfig {
   }
 
   public double getNameNodeCpus() {
-    return getConf().getDouble("mesos.hdfs.namenode.cpus", DEFAULT_NAMENODE_CPUS);
+    return getConf().getDouble("mesos.hbase.namenode.cpus", DEFAULT_NAMENODE_CPUS);
   }
 
   public double getJournalNodeCpus() {
-    return getConf().getDouble("mesos.hdfs.journalnode.cpus", DEFAULT_JOURNAL_CPUS);
+    return getConf().getDouble("mesos.hbase.journalnode.cpus", DEFAULT_JOURNAL_CPUS);
   }
 
   public double getDataNodeCpus() {
-    return getConf().getDouble("mesos.hdfs.datanode.cpus", DEFAULT_DATANODE_CPUS);
+    return getConf().getDouble("mesos.hbase.datanode.cpus", DEFAULT_DATANODE_CPUS);
   }
 
   public double getTaskCpus(String taskName) {
@@ -209,11 +209,11 @@ public class HBaseFrameworkConfig {
   }
 
   public int getJournalNodeCount() {
-    return getConf().getInt("mesos.hdfs.journalnode.count", DEFAULT_JOURNAL_NODE_COUNT);
+    return getConf().getInt("mesos.hbase.journalnode.count", DEFAULT_JOURNAL_NODE_COUNT);
   }
 
   public String getFrameworkName() {
-    return getConf().get("mesos.hdfs.framework.name", "hdfs");
+    return getConf().get("mesos.hbase.framework.name", "hbase");
   }
 
   public long getFailoverTimeout() {
@@ -221,13 +221,13 @@ public class HBaseFrameworkConfig {
   }
 
   // TODO(elingg) Most likely this user name will change to HDFS
-  public String getHdfsUser() {
-    return getConf().get("mesos.hdfs.user", "root");
+  public String getHbaseUser() {
+    return getConf().get("mesos.hbase.user", "root");
   }
 
   // TODO(elingg) This role needs to be updated.
-  public String getHdfsRole() {
-    return getConf().get("mesos.hdfs.role", "*");
+  public String getHbaseRole() {
+    return getConf().get("mesos.hbase.role", "*");
   }
 
   public String getMesosMasterUri() {
@@ -235,15 +235,15 @@ public class HBaseFrameworkConfig {
   }
 
   public String getDataDir() {
-    return getConf().get("mesos.hdfs.data.dir", "/var/lib/hdfs/data");
+    return getConf().get("mesos.hbase.data.dir", "/var/lib/hbase/data");
   }
 
   public String getSecondaryDataDir() {
-    return getConf().get("mesos.hdfs.secondary.data.dir", "/var/run/hadoop-hdfs");
+    return getConf().get("mesos.hbase.secondary.data.dir", "/var/run/hadoop-hbase");
   }
 
   public String getHaZookeeperQuorum() {
-    return getConf().get("mesos.hdfs.zkfc.ha.zookeeper.quorum", "localhost:2181");
+    return getConf().get("mesos.hbase.zkfc.ha.zookeeper.quorum", "localhost:2181");
   }
   
   public String getHdfsNameServerAddress() {
@@ -255,11 +255,11 @@ public class HBaseFrameworkConfig {
   }
   
   public String getStateZkServers() {
-    return getConf().get("mesos.hdfs.state.zk", "localhost:2181");
+    return getConf().get("mesos.hbase.state.zk", "localhost:2181");
   }
 
   public int getStateZkTimeout() {
-    return getConf().getInt("mesos.hdfs.state.zk.timeout.ms", DEFAULT_ZK_TIME_MS);
+    return getConf().getInt("mesos.hbase.state.zk.timeout.ms", DEFAULT_ZK_TIME_MS);
   }
 
   public String getNativeLibrary() {
@@ -267,11 +267,11 @@ public class HBaseFrameworkConfig {
   }
 
   public String getFrameworkMountPath() {
-    return getConf().get("mesos.hdfs.framework.mnt.path", "/opt/mesosphere");
+    return getConf().get("mesos.hbase.framework.mnt.path", "/opt/mesosphere");
   }
 
   public String getFrameworkHostAddress() {
-    String hostAddress = getConf().get("mesos.hdfs.framework.hostaddress");
+    String hostAddress = getConf().get("mesos.hbase.framework.hostaddress");
     if (hostAddress == null) {
       try {
         hostAddress = InetAddress.getLocalHost().getHostAddress();
@@ -283,7 +283,7 @@ public class HBaseFrameworkConfig {
   }
 
   // The port can be changed by setting the PORT0 environment variable
-  // See /bin/hdfs-mesos for more details
+  // See /bin/hbase-mesos for more details
   public int getConfigServerPort() {
     String configServerPortString = System.getProperty("mesos.hbase.config.server.port");
     if (configServerPortString == null) {
@@ -297,19 +297,19 @@ public class HBaseFrameworkConfig {
   }
 
   public int getDeadNodeTimeout() {
-    return getConf().getInt("mesos.hdfs.deadnode.timeout.seconds", DEFAULT_DEADNODE_TIMEOUT);
+    return getConf().getInt("mesos.hbase.deadnode.timeout.seconds", DEFAULT_DEADNODE_TIMEOUT);
   }
 
   public String getJreUrl() {
-    return getConf().get("mesos.hdfs.jre-url",
+    return getConf().get("mesos.hbase.jre-url",
         "https://downloads.mesosphere.io/java/jre-7u76-linux-x64.tar.gz");
   }
 
   public String getLdLibraryPath() {
-    return getConf().get("mesos.hdfs.ld-library-path", "/usr/local/lib");
+    return getConf().get("mesos.hbase.ld-library-path", "/usr/local/lib");
   }
 
   public String getJreVersion() {
-    return getConf().get("mesos.hdfs.jre-version", "jre1.7.0_76");
+    return getConf().get("mesos.hbase.jre-version", "jre1.7.0_76");
   }
 }

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [ -z "$PORT0" ] ; then
-  PORT0="8765"
+  PORT0="8766"
 fi
 
 if [ -z "$JAVA_HOME" ]; then
@@ -14,4 +14,6 @@ else
   JAVA_CMD=$JAVA_HOME/bin/java
 fi
 
-exec $JAVA_CMD -cp lib/*.jar -Dmesos.conf.path=conf/hbase-site.xml -Dmesos.hbase.config.server.port=$PORT0 org.apache.mesos.hbase.scheduler.Main
+echo "JAVA_HOME: $JAVA_HOME"
+
+exec $JAVA_CMD -cp "lib/*" -Dmesos.conf.path=conf/mesos-site.xml -Dmesos.hbase.config.server.port=$PORT0 org.apache.mesos.hbase.scheduler.Main

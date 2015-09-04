@@ -105,7 +105,7 @@ mkdir -p $BUILD_DIR/$DIST/conf
 echo "Copying required hadoop dependencies into $BUILD_DIR/$DIST for the scheduler"
 cp $BUILD_CACHE_DIR/$HBASE_DIR/bin/* $BUILD_DIR/$DIST/bin
 cp -R $BUILD_CACHE_DIR/$HBASE_DIR/conf $BUILD_DIR/$DIST
-mkdir $BUILD_CACHE_DIR/$EXECUTOR/lib
+mkdir $BUILD_DIR/$DIST/lib
 cp -R $BUILD_CACHE_DIR/$HBASE_DIR/lib/*.jar $BUILD_DIR/$DIST/lib/
 cp -R $BUILD_CACHE_DIR/$HBASE_DIR/hbase-webapps $BUILD_DIR/$DIST
 

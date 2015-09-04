@@ -9,7 +9,7 @@ import org.apache.mesos.hbase.config.ConfigServer;
 /**
  * Main entry point for the Scheduler.
  */
-public final class Main {
+public class Main {
 
   private final Log log = LogFactory.getLog(Main.class);
 

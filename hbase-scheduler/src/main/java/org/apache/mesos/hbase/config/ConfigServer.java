@@ -111,7 +111,7 @@ public class ConfigServer {
 
       response.setContentType("application/octet-stream;charset=utf-8");
       response.setHeader("Content-Disposition", "attachment; filename=\"" +
-        HBaseConstants.HDFS_CONFIG_FILE_NAME + "\" ");
+        HBaseConstants.HBASE_CONFIG_FILE_NAME + "\" ");
       response.setHeader("Content-Transfer-Encoding", "binary");
       response.setHeader("Content-Length", Integer.toString(content.length()));
 

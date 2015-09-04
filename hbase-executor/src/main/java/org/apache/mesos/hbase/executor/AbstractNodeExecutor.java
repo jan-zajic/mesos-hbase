@@ -103,7 +103,7 @@ public abstract class AbstractNodeExecutor implements Executor {
 
       // Delete and recreate directory for symbolic link every time
       String hdfsBinaryPath = hdfsFrameworkConfig.getFrameworkMountPath()
-        + "/" + HBaseConstants.HDFS_BINARY_DIR;
+        + "/" + HBaseConstants.HBASE_BINARY_DIR;
       File hdfsBinaryDir = new File(hdfsBinaryPath);
 
       // Try to delete the symbolic link in case a dangling link is present

@@ -18,31 +18,31 @@
 
 <configuration>
   <property>
-    <name>mesos.hdfs.data.dir</name>
-    <description>The primary data directory in HDFS</description>
+    <name>mesos.hbase.data.dir</name>
+    <description>The primary data directory in hbase</description>
     <value>/var/lib/hdfs/data</value>
   </property>
 
   <property>
-    <name>mesos.hdfs.secondary.data.dir</name>
-    <description>The secondary data directory in HDFS</description>
-    <value>/var/run/hadoop-hdfs</value>
+    <name>mesos.hbase.secondary.data.dir</name>
+    <description>The secondary data directory in hbase</description>
+    <value>/var/run/hadoop-hbase</value>
   </property>
 
   <property>
-    <name>mesos.hdfs.native-hadoop-binaries</name>
+    <name>mesos.hbase.native-hadoop-binaries</name>
     <description>Mark true if you have hadoop pre-installed on your host machines (otherwise it will be distributed by the scheduler)</description>
     <value>false</value>
   </property>
 
   <property>
-    <name>mesos.hdfs.framework.mnt.path</name>
-    <description>Mount location (if mesos.hdfs.native-hadoop-binaries is marked false)</description>
+    <name>mesos.hbase.framework.mnt.path</name>
+    <description>Mount location (if mesos.hbase.native-hadoop-binaries is marked false)</description>
     <value>/opt/mesosphere</value>
   </property>
 
   <property>
-    <name>mesos.hdfs.state.zk</name>
+    <name>mesos.hbase.state.zk</name>
     <description>Comma-separated hostname-port pairs of zookeeper node locations for HDFS framework state information</description>
     <value>localhost:2181</value>
   </property>
@@ -54,7 +54,7 @@
   </property>
 
   <property>
-    <name>mesos.hdfs.zkfc.ha.zookeeper.quorum</name>
+    <name>mesos.hbase.zkfc.ha.zookeeper.quorum</name>
     <description>Comma-separated list of zookeeper hostname-port pairs for HDFS HA features</description>
     <value>localhost:2181</value>
   </property>
@@ -72,19 +72,19 @@
   </property>
     
   <property>
-    <name>mesos.hdfs.framework.name</name>
-    <description>Your Mesos framework name and cluster name when accessing files (hdfs://YOUR_NAME)</description>
-    <value>hdfs</value>
+    <name>mesos.hbase.framework.name</name>
+    <description>Your Mesos framework name and cluster name when accessing files (hbase://YOUR_NAME)</description>
+    <value>hbase</value>
   </property>
 
   <property>
-    <name>mesos.hdfs.mesosdns</name>
+    <name>mesos.hbase.mesosdns</name>
     <description>Whether to use Mesos DNS for service discovery within HDFS</description>
     <value>false</value>
   </property>
 
   <property>
-    <name>mesos.hdfs.mesosdns.domain</name>
+    <name>mesos.hbase.mesosdns.domain</name>
     <description>Root domain name of Mesos DNS (usually 'mesos')</description>
     <value>mesos</value>
   </property>
@@ -96,7 +96,7 @@
   </property>
 
   <property>
-    <name>mesos.hdfs.journalnode.count</name>
+    <name>mesos.hbase.journalnode.count</name>
     <description>Number of journal nodes (must be odd)</description>
     <value>3</value>
   </property>
@@ -104,58 +104,58 @@
   <!-- Additional settings for fine-tuning -->
   <!--
   <property>
-    <name>mesos.hdfs.jvm.overhead</name>
+    <name>mesos.hbase.jvm.overhead</name>
     <description>Multiplier on resources reserved in order to account for JVM allocation</description>
     <value>1.35</value>
   </property>
 
   <property>
-    <name>mesos.hdfs.hadoop.heap.size</name>
+    <name>mesos.hbase.hadoop.heap.size</name>
     <value>512</value>
   </property>
 
   <property>
-    <name>mesos.hdfs.namenode.heap.size</name>
+    <name>mesos.hbase.namenode.heap.size</name>
     <value>4096</value>
   </property>
 
   <property>
-    <name>mesos.hdfs.datanode.heap.size</name>
+    <name>mesos.hbase.datanode.heap.size</name>
     <value>1024</value>
   </property>
 
   <property>
-    <name>mesos.hdfs.executor.heap.size</name>
+    <name>mesos.hbase.executor.heap.size</name>
     <value>256</value>
   </property>
 
   <property>
-    <name>mesos.hdfs.executor.cpus</name>
+    <name>mesos.hbase.executor.cpus</name>
     <value>0.5</value>
   </property>
 
   <property>
-    <name>mesos.hdfs.namenode.cpus</name>
+    <name>mesos.hbase.namenode.cpus</name>
     <value>1</value>
   </property>
 
   <property>
-    <name>mesos.hdfs.journalnode.cpus</name>
+    <name>mesos.hbase.journalnode.cpus</name>
     <value>1</value>
   </property>
 
   <property>
-    <name>mesos.hdfs.datanode.cpus</name>
+    <name>mesos.hbase.datanode.cpus</name>
     <value>1</value>
   </property>
 
   <property>
-    <name>mesos.hdfs.user</name>
+    <name>mesos.hbase.user</name>
     <value>root</value>
   </property>
 
   <property>
-    <name>mesos.hdfs.role</name>
+    <name>mesos.hbase.role</name>
     <value>*</value>
   </property>
   -->
