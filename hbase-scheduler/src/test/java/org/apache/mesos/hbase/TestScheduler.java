@@ -4,7 +4,7 @@ import com.google.common.collect.Lists;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.mesos.Protos;
 import org.apache.mesos.SchedulerDriver;
-import org.apache.mesos.hbase.scheduler.HdfsScheduler;
+import org.apache.mesos.hbase.scheduler.HBaseScheduler;
 import org.apache.mesos.hbase.state.AcquisitionPhase;
 import org.apache.mesos.hbase.state.LiveState;
 import org.apache.mesos.hbase.state.IPersistentStateStore;
@@ -51,7 +51,7 @@ public class TestScheduler {
   @Captor
   ArgumentCaptor<Collection<Protos.TaskInfo>> taskInfosCapture;
 
-  HdfsScheduler scheduler;
+  HBaseScheduler scheduler;
 
   @Test
   public void statusUpdateWasStagingNowRunning() {
@@ -149,7 +149,7 @@ public class TestScheduler {
   @Test
   public void launchesNamenodeWhenInNamenode1Phase() {
     when(liveState.getCurrentAcquisitionPhase()).thenReturn(AcquisitionPhase.START_NAME_NODES);
-    when(persistenceStore.getNameNodeTaskNames()).thenReturn(new HashMap<String, String>());
+    when(persistenceStore.getPrimaryNodeTaskNames()).thenReturn(new HashMap<String, String>());
 
     scheduler.resourceOffers(driver, Lists.newArrayList(createTestOffer(0)));
 
@@ -220,7 +220,7 @@ public class TestScheduler {
   @Before
   public void setup() {
     MockitoAnnotations.initMocks(this);
-    this.scheduler = new HdfsScheduler(hdfsFrameworkConfig, liveState, persistenceStore);
+    this.scheduler = new HBaseScheduler(hdfsFrameworkConfig, liveState, persistenceStore);
   }
 
   private Protos.TaskID createTaskId(String id) {

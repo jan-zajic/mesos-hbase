@@ -18,14 +18,14 @@ public final class Main {
   }
 
   private void start() {
-    Injector injector = Guice.createInjector(new HdfsSchedulerModule());
+    Injector injector = Guice.createInjector(new HBaseSchedulerModule());
     getSchedulerThread(injector).start();
     injector.getInstance(ConfigServer.class);
   }
 
   private Thread getSchedulerThread(Injector injector) {
-    Thread scheduler = new Thread(injector.getInstance(HdfsScheduler.class));
-    scheduler.setName("HdfsScheduler");
+    Thread scheduler = new Thread(injector.getInstance(HBaseScheduler.class));
+    scheduler.setName("HBaseScheduler");
     scheduler.setUncaughtExceptionHandler(getUncaughtExceptionHandler());
     return scheduler;
   }

@@ -31,7 +31,7 @@ import static org.apache.mesos.hbase.util.NodeTypes.*;
 public class PersistentStateStore implements IPersistentStateStore {
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
-  private IHdfsStore hdfsStore;
+  private IHBaseStore hdfsStore;
   private DeadNodeTracker deadNodeTracker;
 
   private static final String FRAMEWORK_ID_KEY = "frameworkId";
@@ -44,7 +44,7 @@ public class PersistentStateStore implements IPersistentStateStore {
   @Inject
   public PersistentStateStore(HBaseFrameworkConfig hdfsFrameworkConfig) {
     MesosNativeLibrary.load(hdfsFrameworkConfig.getNativeLibrary());
-    this.hdfsStore = new HdfsZkStore(hdfsFrameworkConfig);
+    this.hdfsStore = new HBaseZkStore(hdfsFrameworkConfig);
     deadNodeTracker = new DeadNodeTracker(hdfsFrameworkConfig);
 
     int deadNameNodes = getDeadNameNodes().size();
@@ -97,7 +97,7 @@ public class PersistentStateStore implements IPersistentStateStore {
   }
 
   @Override
-  public void addHdfsNode(Protos.TaskID taskId, String hostname, String taskType, String taskName) {
+  public void addHBaseNode(Protos.TaskID taskId, String hostname, String taskType, String taskName) {
     switch (taskType) {
       case HBaseConstants.MASTER_NODE_ID:
         addNameNode(taskId, hostname, taskName);
@@ -117,16 +117,16 @@ public class PersistentStateStore implements IPersistentStateStore {
   }
 
   private void addNameNode(Protos.TaskID taskId, String hostname, String taskName) {
-    Map<String, String> nameNodes = getNameNodes();
+    Map<String, String> nameNodes = getPrimaryNodes();
     nameNodes.put(hostname, taskId.getValue());
     setNameNodes(nameNodes);
-    Map<String, String> nameNodeTaskNames = getNameNodeTaskNames();
+    Map<String, String> nameNodeTaskNames = getPrimaryNodeTaskNames();
     nameNodeTaskNames.put(taskId.getValue(), taskName);
     setNameNodeTaskNames(nameNodeTaskNames);
   }
 
   @Override
-  public Map<String, String> getNameNodeTaskNames() {
+  public Map<String, String> getPrimaryNodeTaskNames() {
     return getNodesMap(NAMENODE_TASKNAMES_KEY);
   }
 
@@ -134,10 +134,10 @@ public class PersistentStateStore implements IPersistentStateStore {
   public List<String> getDeadNameNodes() {
     List<String> deadNameHosts = new ArrayList<>();
 
-    if (deadNodeTracker.nameNodeTimerExpired()) {
+    if (deadNodeTracker.masterNodeTimerExpired()) {
       removeDeadNameNodes();
     } else {
-      Map<String, String> nameNodes = getNameNodes();
+      Map<String, String> nameNodes = getPrimaryNodes();
       final Set<Map.Entry<String, String>> nameNodeEntries = nameNodes.entrySet();
       for (Map.Entry<String, String> nameNode : nameNodeEntries) {
         if (nameNode.getValue() == null) {
@@ -150,7 +150,7 @@ public class PersistentStateStore implements IPersistentStateStore {
 
   private void removeDeadNameNodes() {
     deadNodeTracker.resetNameNodeTimeStamp();
-    Map<String, String> nameNodes = getNameNodes();
+    Map<String, String> nameNodes = getPrimaryNodes();
     List<String> deadNameHosts = getDeadNameNodes();
     for (String deadNameHost : deadNameHosts) {
       nameNodes.remove(deadNameHost);
@@ -163,7 +163,7 @@ public class PersistentStateStore implements IPersistentStateStore {
   public List<String> getDeadDataNodes() {
     List<String> deadDataHosts = new ArrayList<>();
 
-    if (deadNodeTracker.dataNodeTimerExpired()) {
+    if (deadNodeTracker.slaveNodeTimerExpired()) {
       removeDeadDataNodes();
     } else {
       Map<String, String> dataNodes = getDataNodes();
@@ -189,13 +189,13 @@ public class PersistentStateStore implements IPersistentStateStore {
   }
 
   @Override
-  public Map<String, String> getNameNodes() {
-    return getNodesMap(NAMENODES_KEY);
+  public Map<String, String> getPrimaryNodes() {
+    return getNodesMap(MASTERNODES_KEY);
   }
 
   @Override
   public Map<String, String> getDataNodes() {
-    return getNodesMap(DATANODES_KEY);
+    return getNodesMap(SLAVENODES_KEY);
   }
 
   @Override
@@ -205,13 +205,13 @@ public class PersistentStateStore implements IPersistentStateStore {
 
   @Override
   public boolean nameNodeRunningOnSlave(String hostname) {
-    return getNameNodes().containsKey(hostname);
+    return getPrimaryNodes().containsKey(hostname);
   }
 
   @Override
   public Set<String> getAllTaskIds() {
     Set<String> allTaskIds = new HashSet<String>();
-    Collection<String> nameNodes = getNameNodes().values();
+    Collection<String> nameNodes = getPrimaryNodes().values();
     Collection<String> dataNodes = getDataNodes().values();
     allTaskIds.addAll(nameNodes);
     allTaskIds.addAll(dataNodes);
@@ -235,13 +235,13 @@ public class PersistentStateStore implements IPersistentStateStore {
   private boolean removeTaskIdFromNameNodes(String taskId) {
     boolean nodesModified = false;
 
-    Map<String, String> nameNodes = getNameNodes();
+    Map<String, String> nameNodes = getPrimaryNodes();
     if (nameNodes.values().contains(taskId)) {
       for (Map.Entry<String, String> entry : nameNodes.entrySet()) {
         if (entry.getValue() != null && entry.getValue().equals(taskId)) {
           nameNodes.put(entry.getKey(), null);
           setNameNodes(nameNodes);
-          Map<String, String> nameNodeTaskNames = getNameNodeTaskNames();
+          Map<String, String> nameNodeTaskNames = getPrimaryNodeTaskNames();
           nameNodeTaskNames.remove(taskId);
           setNameNodeTaskNames(nameNodeTaskNames);
 
@@ -271,25 +271,9 @@ public class PersistentStateStore implements IPersistentStateStore {
     return nodesModified;
   }
 
-  private void setJournalNodes(Map<String, String> journalNodes) {
-    try {
-      hdfsStore.set(JOURNALNODES_KEY, journalNodes);
-    } catch (Exception e) {
-      logger.error("Error while setting journal nodes in persistent state", e);
-    }
-  }
-
-  private void setJournalNodeTaskNames(Map<String, String> journalNodeTaskNames) {
-    try {
-      hdfsStore.set(JOURNALNODE_TASKNAMES_KEY, journalNodeTaskNames);
-    } catch (Exception e) {
-      logger.error("Error while setting journal node task names in persistent state", e);
-    }
-  }
-
   private void setNameNodes(Map<String, String> nameNodes) {
     try {
-      hdfsStore.set(NAMENODES_KEY, nameNodes);
+      hdfsStore.set(MASTERNODES_KEY, nameNodes);
     } catch (Exception e) {
       logger.error("Error while setting name nodes in persistent state", e);
     }
@@ -305,7 +289,7 @@ public class PersistentStateStore implements IPersistentStateStore {
 
   private void setDataNodes(Map<String, String> dataNodes) {
     try {
-      hdfsStore.set(DATANODES_KEY, dataNodes);
+      hdfsStore.set(SLAVENODES_KEY, dataNodes);
     } catch (Exception e) {
       logger.error("Error while setting data nodes in persistent state", e);
     }

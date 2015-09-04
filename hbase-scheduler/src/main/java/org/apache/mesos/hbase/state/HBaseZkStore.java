@@ -19,16 +19,16 @@ import org.apache.mesos.hbase.config.HBaseFrameworkConfig;
  * throws exceptions to allow the manager to handle the logic.  It currently is tied to zookeeper, but should
  * be replaceable with any mesos state abstraction.
  */
-public class HdfsZkStore implements IHdfsStore {
+public class HBaseZkStore implements IHBaseStore {
 
   private State state;
 
-  public HdfsZkStore(HBaseFrameworkConfig hdfsFrameworkConfig) {
+  public HBaseZkStore(HBaseFrameworkConfig hdfsFrameworkConfig) {
 
     this.state = new ZooKeeperState(hdfsFrameworkConfig.getStateZkServers(),
         hdfsFrameworkConfig.getStateZkTimeout(),
         TimeUnit.MILLISECONDS,
-        "/hdfs-mesos/" + hdfsFrameworkConfig.getFrameworkName());
+        "/hbase-mesos/" + hdfsFrameworkConfig.getFrameworkName());
   }
 
   public byte[] getRawValueForId(String id) throws ExecutionException, InterruptedException {

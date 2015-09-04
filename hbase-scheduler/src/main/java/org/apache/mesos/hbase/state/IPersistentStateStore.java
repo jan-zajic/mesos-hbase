@@ -19,15 +19,15 @@ public interface IPersistentStateStore {
 
   Set<String> getAllTaskIds();
 
-  void addHdfsNode(Protos.TaskID taskId, String hostname, String taskType, String taskName);
+  void addHBaseNode(Protos.TaskID taskId, String hostname, String taskType, String taskName);
 
-  Map<String, String> getNameNodeTaskNames();
+  Map<String, String> getPrimaryNodeTaskNames();
 
   List<String> getDeadNameNodes();
 
   List<String> getDeadDataNodes();
 
-  Map<String, String> getNameNodes();
+  Map<String, String> getPrimaryNodes();
 
   Map<String, String> getDataNodes();
 

@@ -28,9 +28,10 @@ import java.util.TreeSet;
 import org.apache.mesos.hbase.util.HBaseConstants;
 
 /**
- * This is the HTTP service which allows executors to fetch the configuration for hdfs-site.xml.
+ * This is the HTTP service which allows executors to fetch the configuration for hbase-site.xml.
  */
 public class ConfigServer {
+  
   private final Log log = LogFactory.getLog(ConfigServer.class);
 
   private Server server;
@@ -73,6 +74,7 @@ public class ConfigServer {
   }
 
   private class ServeHdfsConfigHandler extends AbstractHandler {
+      
     public synchronized void handle(String target, Request baseRequest, HttpServletRequest request,
       HttpServletResponse response) throws IOException {
 
@@ -85,18 +87,22 @@ public class ConfigServer {
 
       String content = new String(Files.readAllBytes(Paths.get(confFile.getPath())), Charset.defaultCharset());
 
-      Set<String> nameNodes = new TreeSet<>();
-      nameNodes.addAll(persistenceStore.getNameNodes().keySet());
-
+      Set<String> primaryNodes = new TreeSet<>();
+      primaryNodes.addAll(persistenceStore.getPrimaryNodes().keySet());
+      
       Map<String, Object> model = new HashMap<>();
-      Iterator<String> iter = nameNodes.iterator();
+      Iterator<String> iter = primaryNodes.iterator();
+      
       if (iter.hasNext()) {
-        model.put("nn1Hostname", iter.next());
+        model.put("primary1Hostname", iter.next());
       }
+      
       if (iter.hasNext()) {
-        model.put("nn2Hostname", iter.next());
+        model.put("primary2Hostname", iter.next());
       }
-
+      
+      model.put("nameServerAddress", hdfsFrameworkConfig.getHdfsNameServerAddress());
+      model.put("nameServerPort", hdfsFrameworkConfig.getHdfsNameServerPort());      
       model.put("frameworkName", hdfsFrameworkConfig.getFrameworkName());
       model.put("dataDir", hdfsFrameworkConfig.getDataDir());
       model.put("haZookeeperQuorum", hdfsFrameworkConfig.getHaZookeeperQuorum());
@@ -114,18 +120,5 @@ public class ConfigServer {
       response.getWriter().println(content);
     }
 
-    private String getJournalNodes(Set<String> journalNodes) {
-      StringBuilder journalNodeStringBuilder = new StringBuilder("");
-      for (String jn : journalNodes) {
-        journalNodeStringBuilder.append(jn).append(":8485;");
-      }
-      String journalNodeString = journalNodeStringBuilder.toString();
-
-      if (!journalNodeString.isEmpty()) {
-        // Chop the trailing ,
-        journalNodeString = journalNodeString.substring(0, journalNodeString.length() - 1);
-      }
-      return journalNodeString;
-    }
   }
 }

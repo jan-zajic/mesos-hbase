@@ -2,8 +2,12 @@
 <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
 <configuration>
   <property>
+    <name>hbase.master</name>
+    <value>${primary1Hostname}:60000</value>
+  </property> 
+  <property>
     <name>hbase.rootdir</name>
-    <value>hdfs://${nn1Hostname}:8020/hbase</value>
+    <value>hdfs://${nameServerAddress}:${nameServerPort}/hbase</value>
   </property>
   <property>
     <name>hbase.cluster.distributed</name>
@@ -11,6 +15,6 @@
   </property>
   <property>
     <name>hbase.zookeeper.quorum</name>
-    <value>${zookeperMasters}</value>
+    <value>${haZookeeperQuorum}</value>
   </property>
 </configuration>

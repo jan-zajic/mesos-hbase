@@ -5,9 +5,8 @@ package org.apache.mesos.hbase.util;
  */
 public final class NodeTypes {
 
-  public static final String NAMENODES_KEY = "nameNodes";
-  public static final String JOURNALNODES_KEY = "journalNodes";
-  public static final String DATANODES_KEY = "dataNodes";
+  public static final String MASTERNODES_KEY = "masterNodes";
+  public static final String SLAVENODES_KEY = "slaveNodes";
 
   public NodeTypes() {
   }

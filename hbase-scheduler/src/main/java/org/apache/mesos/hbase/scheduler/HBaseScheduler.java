@@ -46,9 +46,9 @@ import org.apache.mesos.hbase.util.HBaseConstants;
 /**
  * HDFS Mesos Framework Scheduler class implementation.
  */
-public class HdfsScheduler implements org.apache.mesos.Scheduler, Runnable {
+public class HBaseScheduler implements org.apache.mesos.Scheduler, Runnable {
   // TODO (elingg) remove as much logic as possible from Scheduler to clean up code
-  private final Log log = LogFactory.getLog(HdfsScheduler.class);
+  private final Log log = LogFactory.getLog(HBaseScheduler.class);
 
   private static final int SECONDS_FROM_MILLIS = 1000;
 
@@ -58,7 +58,7 @@ public class HdfsScheduler implements org.apache.mesos.Scheduler, Runnable {
   private final DnsResolver dnsResolver;
 
   @Inject
-  public HdfsScheduler(HBaseFrameworkConfig hdfsFrameworkConfig,
+  public HBaseScheduler(HBaseFrameworkConfig hdfsFrameworkConfig,
       LiveState liveState, IPersistentStateStore persistenceStore) {
 
     this.hdfsFrameworkConfig = hdfsFrameworkConfig;
@@ -75,8 +75,32 @@ public class HdfsScheduler implements org.apache.mesos.Scheduler, Runnable {
   @Override
   public void error(SchedulerDriver driver, String message) {
     log.error("Scheduler driver error: " + message);
+    // Currently, it's pretty hard to disambiguate this error from other causes of framework errors.
+    // Watch MESOS-2522 which will add a reason field for framework errors to help with this.
+    // For now the frameworkId is removed for all messages.
+    boolean removeFrameworkId = message.contains("re-register");
+    suicide(removeFrameworkId);
   }
-
+  
+  /**
+    * Exits the JVM process, optionally deleting Marathon's FrameworkID
+    * from the backing persistence store.
+    *
+    * If `removeFrameworkId` is set, the next Marathon process elected
+    * leader will fail to find a stored FrameworkID and invoke `register`
+    * instead of `reregister`.  This is important because on certain kinds
+    * of framework errors (such as exceeding the framework failover timeout),
+    * the scheduler may never re-register with the saved FrameworkID until
+    * the leading Mesos master process is killed.
+    */
+  private void suicide(Boolean removeFrameworkId)  {
+    if (removeFrameworkId) 
+    {
+        persistenceStore.setFrameworkId(null);
+        System.exit(9);
+    }
+  }
+  
   @Override
   public void executorLost(SchedulerDriver driver, ExecutorID executorID, SlaveID slaveID,
       int status) {
@@ -250,7 +274,7 @@ public class HdfsScheduler implements org.apache.mesos.Scheduler, Runnable {
     registerFramework(this, frameworkInfo.build(), hdfsFrameworkConfig.getMesosMasterUri());
   }
 
-  private void registerFramework(HdfsScheduler sched, FrameworkInfo fInfo, String masterUri) {
+  private void registerFramework(HBaseScheduler sched, FrameworkInfo fInfo, String masterUri) {
     Credential cred = getCredential();
 
     if (cred != null) {
@@ -310,7 +334,7 @@ public class HdfsScheduler implements org.apache.mesos.Scheduler, Runnable {
       tasks.add(task);
 
       liveState.addStagingTask(task.getTaskId());
-      persistenceStore.addHdfsNode(taskId, offer.getHostname(), taskType, taskName);
+      persistenceStore.addHBaseNode(taskId, offer.getHostname(), taskType, taskName);
     }
     driver.launchTasks(Arrays.asList(offer.getId()), tasks);
     return true;
@@ -319,7 +343,7 @@ public class HdfsScheduler implements org.apache.mesos.Scheduler, Runnable {
   private String getNextTaskName(String taskType) {
 
     if (taskType.equals(HBaseConstants.MASTER_NODE_ID)) {
-      Collection<String> nameNodeTaskNames = persistenceStore.getNameNodeTaskNames().values();
+      Collection<String> nameNodeTaskNames = persistenceStore.getPrimaryNodeTaskNames().values();
       for (int i = 1; i <= HBaseConstants.TOTAL_MASTER_NODES; i++) {
         if (!nameNodeTaskNames.contains(HBaseConstants.MASTER_NODE_ID + i)) {
           return HBaseConstants.MASTER_NODE_ID + i;
@@ -469,7 +493,7 @@ public class HdfsScheduler implements org.apache.mesos.Scheduler, Runnable {
     List<String> deadNameNodes = persistenceStore.getDeadNameNodes();
 
     if (deadNameNodes.isEmpty()) {
-      if (persistenceStore.getNameNodes().size() == HBaseConstants.TOTAL_MASTER_NODES) {
+      if (persistenceStore.getPrimaryNodes().size() == HBaseConstants.TOTAL_MASTER_NODES) {
         log.info(String.format("Already running %s namenodes", HBaseConstants.TOTAL_MASTER_NODES));
       } else if (persistenceStore.nameNodeRunningOnSlave(offer.getHostname())) {
         log.info(String.format("Already running namenode on %s", offer.getHostname()));
@@ -604,8 +628,8 @@ public class HdfsScheduler implements org.apache.mesos.Scheduler, Runnable {
     @Override
     public void run() {
       log.info("Current persistent state:");
-      log.info(String.format("NameNodes: %s, %s", persistenceStore.getNameNodes(),
-          persistenceStore.getNameNodeTaskNames()));
+      log.info(String.format("NameNodes: %s, %s", persistenceStore.getPrimaryNodes(),
+          persistenceStore.getPrimaryNodeTaskNames()));
       log.info(String.format("DataNodes: %s", persistenceStore.getDataNodes()));
 
       Set<String> taskIds = persistenceStore.getAllTaskIds();

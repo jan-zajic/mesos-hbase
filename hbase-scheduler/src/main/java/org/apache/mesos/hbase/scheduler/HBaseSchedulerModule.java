@@ -7,7 +7,7 @@ import org.apache.mesos.hbase.state.PersistentStateStore;
 /**
  * Guice Module for initializing interfaces to implementations for the HDFS Scheduler.
  */
-public class HdfsSchedulerModule extends AbstractModule {
+public class HBaseSchedulerModule extends AbstractModule {
 
   @Override
   protected void configure() {

@@ -4,7 +4,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.mesos.Protos;
 import org.apache.mesos.SchedulerDriver;
-import org.apache.mesos.hbase.scheduler.HdfsScheduler;
+import org.apache.mesos.hbase.scheduler.HBaseScheduler;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -14,22 +14,22 @@ import java.util.Timer;
 import org.apache.mesos.hbase.config.HBaseFrameworkConfig;
 
 /**
- * Provides DNS resolving specific to HDFS.
+ * Provides DNS resolving specific to HBase.
  */
 public class DnsResolver {
   private final Log log = LogFactory.getLog(DnsResolver.class);
 
   static final int NN_TIMER_PERIOD = 10000;
 
-  private final HdfsScheduler scheduler;
+  private final HBaseScheduler scheduler;
   private final HBaseFrameworkConfig hdfsFrameworkConfig;
 
-  public DnsResolver(HdfsScheduler scheduler, HBaseFrameworkConfig hdfsFrameworkConfig) {
+  public DnsResolver(HBaseScheduler scheduler, HBaseFrameworkConfig hdfsFrameworkConfig) {
     this.scheduler = scheduler;
     this.hdfsFrameworkConfig = hdfsFrameworkConfig;
   }
 
-  public boolean nameNodesResolvable() {
+  public boolean masterNodesResolvable() {
     if (!hdfsFrameworkConfig.usingMesosDns()) {
       return true;
     } //short circuit since Mesos handles this otherwise

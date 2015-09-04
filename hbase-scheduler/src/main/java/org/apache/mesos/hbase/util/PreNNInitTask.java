@@ -2,7 +2,7 @@ package org.apache.mesos.hbase.util;
 
 import org.apache.mesos.Protos;
 import org.apache.mesos.SchedulerDriver;
-import org.apache.mesos.hbase.scheduler.HdfsScheduler;
+import org.apache.mesos.hbase.scheduler.HBaseScheduler;
 
 import java.util.TimerTask;
 
@@ -12,13 +12,13 @@ import java.util.TimerTask;
 public class PreNNInitTask extends TimerTask {
 
   private final DnsResolver dnsResolver;
-  private final HdfsScheduler scheduler;
+  private final HBaseScheduler scheduler;
   private final SchedulerDriver driver;
   private final Protos.TaskID taskId;
   private final Protos.SlaveID slaveID;
   private final String message;
 
-  public PreNNInitTask(DnsResolver dnsResolver, HdfsScheduler scheduler, SchedulerDriver driver,
+  public PreNNInitTask(DnsResolver dnsResolver, HBaseScheduler scheduler, SchedulerDriver driver,
       Protos.TaskID taskId,
       Protos.SlaveID slaveID, String message) {
     this.dnsResolver = dnsResolver;
@@ -31,7 +31,7 @@ public class PreNNInitTask extends TimerTask {
 
   @Override
   public void run() {
-    if (dnsResolver.nameNodesResolvable()) {
+    if (dnsResolver.masterNodesResolvable()) {
       scheduler.sendMessageTo(driver, taskId, slaveID, message);
       this.cancel();
     }

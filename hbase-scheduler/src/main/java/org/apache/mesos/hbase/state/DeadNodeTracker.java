@@ -17,7 +17,7 @@ public class DeadNodeTracker {
 
   private Map<String, Timestamp> timestampMap;
   private String[] nodes = {
-      JOURNALNODES_KEY, NAMENODES_KEY, DATANODES_KEY};
+      MASTERNODES_KEY, SLAVENODES_KEY};
 
   private HBaseFrameworkConfig hdfsFrameworkConfig;
 
@@ -49,23 +49,19 @@ public class DeadNodeTracker {
   }
 
   public void resetNameNodeTimeStamp() {
-    resetNodeTimeStamp(NAMENODES_KEY);
+    resetNodeTimeStamp(MASTERNODES_KEY);
   }
 
   public void resetDataNodeTimeStamp() {
-    resetNodeTimeStamp(DATANODES_KEY);
+    resetNodeTimeStamp(SLAVENODES_KEY);
   }
 
-  public boolean journalNodeTimerExpired() {
-    return nodeTimerExpired(JOURNALNODES_KEY);
+  public boolean masterNodeTimerExpired() {
+    return nodeTimerExpired(MASTERNODES_KEY);
   }
 
-  public boolean nameNodeTimerExpired() {
-    return nodeTimerExpired(NAMENODES_KEY);
-  }
-
-  public boolean dataNodeTimerExpired() {
-    return nodeTimerExpired(DATANODES_KEY);
+  public boolean slaveNodeTimerExpired() {
+    return nodeTimerExpired(SLAVENODES_KEY);
   }
 
   private boolean nodeTimerExpired(String nodeType) {
