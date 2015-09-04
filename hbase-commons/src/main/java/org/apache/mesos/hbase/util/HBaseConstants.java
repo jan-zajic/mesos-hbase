@@ -20,7 +20,7 @@ public final class HBaseConstants {
 
   // ExecutorsIds
   public static final String NODE_EXECUTOR_ID = "NodeExecutor";
-  public static final String MASTER_NODE_EXECUTOR_ID = "MasterNodeExecutor";
+  public static final String MASTER_NODE_EXECUTOR_ID = "NodeExecutor";
 
   // Path to Store HDFS Binary
   public static final String HBASE_BINARY_DIR = "hbase";
