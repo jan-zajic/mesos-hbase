@@ -468,8 +468,8 @@ public class HBaseScheduler implements org.apache.mesos.Scheduler, Runnable {
 
   private boolean tryToLaunchMasterNode(SchedulerDriver driver, Offer offer) {
     if (offerNotEnoughResources(offer,
-        (hbaseFrameworkConfig.getNameNodeCpus() + hbaseFrameworkConfig.getZkfcCpus()),
-        (hbaseFrameworkConfig.getNameNodeHeapSize() + hbaseFrameworkConfig.getZkfcHeapSize()))) {
+        (hbaseFrameworkConfig.getNameNodeCpus()),
+        (hbaseFrameworkConfig.getNameNodeHeapSize()))) {
       log.info("namenode offer does not have enough resources.");
       return false;
     }

@@ -118,16 +118,9 @@ public class HBaseFrameworkConfig {
     return getConf().getInt("mesos.hbase.executor.heap.size", DEFAULT_EXECUTOR_HEAP_SIZE);
   }
 
-  public int getZkfcHeapSize() {
-    return getHadoopHeapSize();
-  }
-
   public int getTaskHeapSize(String taskName) {
     int size;
     switch (taskName) {
-      case "zkfc":
-        size = getZkfcHeapSize();
-        break;
       case "namenode":
         size = getNameNodeHeapSize();
         break;
@@ -169,10 +162,6 @@ public class HBaseFrameworkConfig {
     return getConf().getDouble("mesos.hbase.executor.cpus", DEFAULT_EXECUTOR_CPUS);
   }
 
-  public double getZkfcCpus() {
-    return getExecutorCpus();
-  }
-
   public double getNameNodeCpus() {
     return getConf().getDouble("mesos.hbase.namenode.cpus", DEFAULT_NAMENODE_CPUS);
   }
@@ -188,9 +177,6 @@ public class HBaseFrameworkConfig {
   public double getTaskCpus(String taskName) {
     double cpus = DEFAULT_CPUS;
     switch (taskName) {
-      case "zkfc":
-        cpus = getZkfcCpus();
-        break;
       case "namenode":
         cpus = getNameNodeCpus();
         break;
