@@ -287,7 +287,7 @@
         <configuration>
           <archive>
             <manifest>
-              <mainClass>org.apache.mesos.hdfs.Main</mainClass>
+              <mainClass>org.apache.mesos.hbase.Main</mainClass>
             </manifest>
           </archive>
         </configuration>

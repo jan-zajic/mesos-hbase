@@ -1,0 +1,125 @@
+#!/bin/bash
+
+# this should move out to gradle builds
+# this will create in the project/build dir the tarball to distribute
+
+VERSION="0.1.0"
+PROJ_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )"/..  && pwd )"
+BUILD_DIR=$PROJ_DIR/build
+BUILD_CACHE_DIR=$BUILD_DIR/cache
+
+HBASE_VER=1.1.2
+HBASE_DIR=hbase-$HBASE_VER
+HBASE_ZIP=$HBASE_DIR-bin.tar.gz
+HBASE_URL=https://www.apache.org/dist/hbase/1.1.2/$HBASE_ZIP
+
+echo "build dir is: $BUILD_DIR"
+
+# the full distro is in the $DIST dir or $DIST.tzg
+DIST=hbase-mesos-$VERSION
+EXECUTOR=hbase-mesos-executor-$VERSION
+
+# Remove cached binaries and exit
+if [ "$1" == "clean" ]; then
+  rm -rf $BUILD_DIR
+  $PROJ_DIR/gradlew clean
+  exit 0
+fi
+
+# Build and package hbase-mesos project
+if [ "$1" != "nocompile" ]; then
+  $PROJ_DIR/gradlew clean shadowJar || exit
+fi
+
+mkdir $BUILD_DIR
+mkdir $BUILD_CACHE_DIR
+
+# Download hbase binary
+if [ ! -f $BUILD_CACHE_DIR/$HBASE_ZIP ]; then
+  echo "Downloading $HADOOP_URL"
+  wget -P $BUILD_CACHE_DIR $HBASE_URL || exit
+else
+  echo "($HBASE_ZIP already exists, skipping dl)"
+fi
+
+# Extract hbase
+if [ ! -d $BUILD_CACHE_DIR/$HBASE_DIR ]; then
+	echo $BUILD_CACHE_DIR/$HBASE_DIR
+  echo "Extracting $HBASE_ZIP in $BUILD_CACHE_DIR"
+	cd $BUILD_CACHE_DIR
+  tar xf $HBASE_ZIP --exclude='docs'
+	cd -
+else
+  echo "($HBASE_DIR already exists, skipping extract)"
+fi
+
+# Create dist
+if [ ! -d $BUILD_CACHE_DIR/$EXECUTOR ]; then
+  echo "Creating new $BUILD_CACHE_DIR/$EXECUTOR dist folder"
+  mkdir -p $BUILD_CACHE_DIR/$EXECUTOR
+else
+  echo "($BUILD_CACHE_DIR/$EXECUTOR already exists, deleting before create)"
+  rm -rf $BUILD_CACHE_DIR/$EXECUTOR
+  mkdir -p $BUILD_CACHE_DIR/$EXECUTOR
+fi
+
+# Copy to dist
+echo "Copying required hbase dependencies into $BUILD_DIR/$EXECUTOR"
+cp -R $BUILD_CACHE_DIR/$HBASE_DIR/bin $BUILD_CACHE_DIR/$EXECUTOR
+cp -R $BUILD_CACHE_DIR/$HBASE_DIR/conf $BUILD_CACHE_DIR/$EXECUTOR
+mkdir $BUILD_CACHE_DIR/$EXECUTOR/lib
+cp -R $BUILD_CACHE_DIR/$HBASE_DIR/lib/*.jar $BUILD_CACHE_DIR/$EXECUTOR/lib/
+cp -R $BUILD_CACHE_DIR/$HBASE_DIR/hbase-webapps $BUILD_CACHE_DIR/$EXECUTOR
+
+echo "Copying build output into $BUILD_CACHE_DIR/$DIST"
+cd $BUILD_CACHE_DIR/$EXECUTOR
+cp $PROJ_DIR/bin/* bin/
+cp $PROJ_DIR/hbase-executor/build/libs/*-uber.jar lib/
+cp $PROJ_DIR/conf/* conf/
+cd -
+
+# Compress tarball
+echo "Compressing to $EXECUTOR.tgz"
+rm -f $BUILD_CACHE_DIR/$EXECUTOR.tgz
+cd $BUILD_CACHE_DIR
+tar czf $EXECUTOR.tgz $EXECUTOR
+cd -
+
+#####  Framework / scheduler build
+
+# Create Framework dir
+if [ ! -d $BUILD_DIR/$DIST ]; then
+  echo "Creating new $BUILD_DIR/$DIST dist folder"
+  mkdir -p $BUILD_DIR/$DIST
+else
+  echo "($BUILD_DIR/$DIST already exists, deleting before create)"
+  rm -rf $BUILD_DIR/$DIST
+  mkdir -p $BUILD_DIR/$DIST
+fi
+
+# scheduler
+mkdir -p $BUILD_DIR/$DIST/bin
+mkdir -p $BUILD_DIR/$DIST/lib
+mkdir -p $BUILD_DIR/$DIST/conf
+
+echo "Copying required hadoop dependencies into $BUILD_DIR/$DIST for the scheduler"
+cp $BUILD_CACHE_DIR/$HBASE_DIR/bin/* $BUILD_DIR/$DIST/bin
+cp -R $BUILD_CACHE_DIR/$HBASE_DIR/conf $BUILD_DIR/$DIST
+mkdir $BUILD_CACHE_DIR/$EXECUTOR/lib
+cp -R $BUILD_CACHE_DIR/$HBASE_DIR/lib/*.jar $BUILD_DIR/$DIST/lib/
+cp -R $BUILD_CACHE_DIR/$HBASE_DIR/hbase-webapps $BUILD_DIR/$DIST
+
+## hbase scheduler project needs
+cp $PROJ_DIR/bin/hbase-mesos $BUILD_DIR/$DIST/bin
+cp $PROJ_DIR/hbase-scheduler/build/libs/*-uber.jar $BUILD_DIR/$DIST/lib
+cp $BUILD_CACHE_DIR/$EXECUTOR.tgz $BUILD_DIR/$DIST
+cp $PROJ_DIR/conf/*.xml $BUILD_DIR/$DIST/conf
+
+echo Adding read permissions to everything in and below $BUILD_DIR
+cd $BUILD_DIR
+chmod -R a+r .
+
+echo Creating $DIST.tgz while retaining permissions 
+tar pczf $DIST.tgz $DIST
+
+echo "HDFS framework build complete: $BUILD_DIR/$DIST.tgz"

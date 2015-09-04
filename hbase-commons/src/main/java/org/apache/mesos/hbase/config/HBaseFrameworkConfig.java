@@ -277,9 +277,9 @@ public class HBaseFrameworkConfig {
   // The port can be changed by setting the PORT0 environment variable
   // See /bin/hdfs-mesos for more details
   public int getConfigServerPort() {
-    String configServerPortString = System.getProperty("mesos.hdfs.config.server.port");
+    String configServerPortString = System.getProperty("mesos.hbase.config.server.port");
     if (configServerPortString == null) {
-      configServerPortString = getConf().get("mesos.hdfs.config.server.port", "8765");
+      configServerPortString = getConf().get("mesos.hbase.config.server.port", "8765");
     }
     return Integer.parseInt(configServerPortString);
   }

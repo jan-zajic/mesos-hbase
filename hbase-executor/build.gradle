@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-  compile project(':hdfs-commons')
+  compile project(':hbase-commons')
 
 }
 

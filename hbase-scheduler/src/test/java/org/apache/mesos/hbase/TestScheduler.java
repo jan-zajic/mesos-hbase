@@ -1,4 +1,4 @@
-package org.apache.mesos.hdfs;
+package org.apache.mesos.hbase;
 
 import com.google.common.collect.Lists;
 import org.apache.hadoop.conf.Configuration;

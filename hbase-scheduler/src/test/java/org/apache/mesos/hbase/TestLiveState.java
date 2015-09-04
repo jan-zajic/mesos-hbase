@@ -1,4 +1,4 @@
-package org.apache.mesos.hdfs;
+package org.apache.mesos.hbase;
 
 import com.google.protobuf.ByteString;
 import org.apache.mesos.Protos;

@@ -31,7 +31,7 @@ subprojects {
 
   [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 
-  mainClassName = "org.apache.mesos.hdfs.scheduler.Main"
+  mainClassName = "org.apache.mesos.hbase.scheduler.Main"
 
   ext {
     mesosVer = "0.22.1"
