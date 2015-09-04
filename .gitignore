@@ -1,6 +1,5 @@
 target/
 hadoop-*
-hbase-mesos-*
 native/
 
 # idea
