@@ -88,9 +88,6 @@ public class ConfigServer {
       Set<String> nameNodes = new TreeSet<>();
       nameNodes.addAll(persistenceStore.getNameNodes().keySet());
 
-      Set<String> journalNodes = new TreeSet<>();
-      journalNodes.addAll(persistenceStore.getJournalNodes().keySet());
-
       Map<String, Object> model = new HashMap<>();
       Iterator<String> iter = nameNodes.iterator();
       if (iter.hasNext()) {
@@ -100,9 +97,6 @@ public class ConfigServer {
         model.put("nn2Hostname", iter.next());
       }
 
-      String journalNodeString = getJournalNodes(journalNodes);
-
-      model.put("journalnodes", journalNodeString);
       model.put("frameworkName", hdfsFrameworkConfig.getFrameworkName());
       model.put("dataDir", hdfsFrameworkConfig.getDataDir());
       model.put("haZookeeperQuorum", hdfsFrameworkConfig.getHaZookeeperQuorum());

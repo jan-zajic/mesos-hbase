@@ -38,11 +38,7 @@ public class DeadNodeTracker {
     timestampMap.put(nodeType, new Timestamp(date.getTime()));
   }
 
-  public void resetDeadNodeTimeStamps(int deadJournalNodes, int deadNameNodes, int deadDataNodes) {
-    if (deadJournalNodes > 0) {
-      resetJournalNodeTimeStamp();
-    }
-
+  public void resetDeadNodeTimeStamps(int deadNameNodes, int deadDataNodes) {
     if (deadNameNodes > 0) {
       resetNameNodeTimeStamp();
     }
@@ -50,10 +46,6 @@ public class DeadNodeTracker {
     if (deadDataNodes > 0) {
       resetDataNodeTimeStamp();
     }
-  }
-
-  public void resetJournalNodeTimeStamp() {
-    resetNodeTimeStamp(JOURNALNODES_KEY);
   }
 
   public void resetNameNodeTimeStamp() {

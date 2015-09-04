@@ -5,27 +5,24 @@ package org.apache.mesos.hbase.util;
  */
 public final class HBaseConstants {
 
-  // Total number of NameNodes
-  // Note: We do not currently support more or less than 2 NameNodes
-  public static final Integer TOTAL_NAME_NODES = 2;
+  // Total number of master nodes
+  public static final Integer TOTAL_MASTER_NODES = 2;
 
   // Messages
-  public static final String NAME_NODE_INIT_MESSAGE = "-i";
-  public static final String NAME_NODE_BOOTSTRAP_MESSAGE = "-b";
+  public static final String MASTER_NODE_INIT_MESSAGE = "-i";
+  public static final String MASTER_NODE_BOOTSTRAP_MESSAGE = "-b";
   public static final String RELOAD_CONFIG = "reload config";
 
   // NodeIds
-  public static final String NAME_NODE_ID = "namenode";
-  public static final String JOURNAL_NODE_ID = "journalnode";
-  public static final String DATA_NODE_ID = "datanode";
-  public static final String ZKFC_NODE_ID = "zkfc";
+  public static final String MASTER_NODE_ID = "masternode";
+  public static final String SLAVE_NODE_ID = "slavenode";
 
   // NameNode TaskId
-  public static final String NAME_NODE_TASKID = ".namenode.namenode.";
+  public static final String MASTER_NODE_TASKID = ".masternode.masternode.";
 
   // ExecutorsIds
   public static final String NODE_EXECUTOR_ID = "NodeExecutor";
-  public static final String NAME_NODE_EXECUTOR_ID = "NameNodeExecutor";
+  public static final String MASTER_NODE_EXECUTOR_ID = "MasterNodeExecutor";
 
   // Path to Store HDFS Binary
   public static final String HDFS_BINARY_DIR = "hdfs";

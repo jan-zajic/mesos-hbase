@@ -23,21 +23,13 @@ public interface IPersistentStateStore {
 
   Map<String, String> getNameNodeTaskNames();
 
-  Map<String, String> getJournalNodeTaskNames();
-
-  List<String> getDeadJournalNodes();
-
   List<String> getDeadNameNodes();
 
   List<String> getDeadDataNodes();
 
-  Map<String, String> getJournalNodes();
-
   Map<String, String> getNameNodes();
 
   Map<String, String> getDataNodes();
-
-  boolean journalNodeRunningOnSlave(String hostname);
 
   boolean dataNodeRunningOnSlave(String hostname);
 

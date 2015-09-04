@@ -72,15 +72,15 @@ public class LiveState {
     // phase. Also, add the health checks which will kill the task if it doesn't properly
     // initialize or if it reaches an error state.
     // Case of name node, update the task map
-    if (status.getTaskId().getValue().contains(HBaseConstants.NAME_NODE_TASKID)) {
+    if (status.getTaskId().getValue().contains(HBaseConstants.MASTER_NODE_TASKID)) {
       // If initializing the first NN or reconciling the first NN or bootstrapping the first NN
       // set the status to initialized
-      if (status.getMessage().equals(HBaseConstants.NAME_NODE_INIT_MESSAGE)
+      if (status.getMessage().equals(HBaseConstants.MASTER_NODE_INIT_MESSAGE)
           || (currentAcquisitionPhase.equals(AcquisitionPhase.RECONCILING_TASKS) && !isNameNode1Initialized())
-          || (status.getMessage().equals(HBaseConstants.NAME_NODE_BOOTSTRAP_MESSAGE) && !isNameNode1Initialized())) {
+          || (status.getMessage().equals(HBaseConstants.MASTER_NODE_BOOTSTRAP_MESSAGE) && !isNameNode1Initialized())) {
         nameNode1TaskMap.clear();
         nameNode1TaskMap.put(status, true);
-      } else if ((status.getMessage().equals(HBaseConstants.NAME_NODE_BOOTSTRAP_MESSAGE)
+      } else if ((status.getMessage().equals(HBaseConstants.MASTER_NODE_BOOTSTRAP_MESSAGE)
           && !isNameNode2Initialized())
           || (currentAcquisitionPhase.equals(AcquisitionPhase.RECONCILING_TASKS)
           && !isNameNode2Initialized())) {
@@ -106,13 +106,9 @@ public class LiveState {
   public void transitionTo(AcquisitionPhase phase) {
     this.currentAcquisitionPhase = phase;
   }
-
-  public int getJournalNodeSize() {
-    return countOfRunningTasksWith(HBaseConstants.JOURNAL_NODE_ID);
-  }
-
+  
   public int getNameNodeSize() {
-    return countOfRunningTasksWith(HBaseConstants.NAME_NODE_TASKID);
+    return countOfRunningTasksWith(HBaseConstants.MASTER_NODE_TASKID);
   }
 
   public Protos.TaskID getFirstNameNodeTaskId() {

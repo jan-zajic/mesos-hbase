@@ -147,15 +147,8 @@ public class HdfsScheduler implements org.apache.mesos.Scheduler, Runnable {
       switch (liveState.getCurrentAcquisitionPhase()) {
         case RECONCILING_TASKS:
           break;
-        case JOURNAL_NODES:
-          if (liveState.getJournalNodeSize() == hdfsFrameworkConfig.getJournalNodeCount()) {
-            // TODO (elingg) move the reload to correctCurrentPhase and make it idempotent
-            reloadConfigsOnAllRunningTasks(driver);
-            correctCurrentPhase();
-          }
-          break;
         case START_NAME_NODES:
-          if (liveState.getNameNodeSize() == HBaseConstants.TOTAL_NAME_NODES) {
+          if (liveState.getNameNodeSize() == HBaseConstants.TOTAL_MASTER_NODES) {
             // TODO (elingg) move the reload to correctCurrentPhase and make it idempotent
             reloadConfigsOnAllRunningTasks(driver);
             correctCurrentPhase();
@@ -164,23 +157,20 @@ public class HdfsScheduler implements org.apache.mesos.Scheduler, Runnable {
         case FORMAT_NAME_NODES:
           if (!liveState.isNameNode1Initialized()
               && !liveState.isNameNode2Initialized()) {
-            dnsResolver.sendMessageAfterNNResolvable(
-                driver,
+            dnsResolver.sendMessageAfterNNResolvable(driver,
                 liveState.getFirstNameNodeTaskId(),
                 liveState.getFirstNameNodeSlaveId(),
-                HBaseConstants.NAME_NODE_INIT_MESSAGE);
+                HBaseConstants.MASTER_NODE_INIT_MESSAGE);
           } else if (!liveState.isNameNode1Initialized()) {
-            dnsResolver.sendMessageAfterNNResolvable(
-                driver,
+            dnsResolver.sendMessageAfterNNResolvable(driver,
                 liveState.getFirstNameNodeTaskId(),
                 liveState.getFirstNameNodeSlaveId(),
-                HBaseConstants.NAME_NODE_BOOTSTRAP_MESSAGE);
+                HBaseConstants.MASTER_NODE_BOOTSTRAP_MESSAGE);
           } else if (!liveState.isNameNode2Initialized()) {
-            dnsResolver.sendMessageAfterNNResolvable(
-                driver,
+            dnsResolver.sendMessageAfterNNResolvable(driver,
                 liveState.getSecondNameNodeTaskId(),
                 liveState.getSecondNameNodeSlaveId(),
-                HBaseConstants.NAME_NODE_BOOTSTRAP_MESSAGE);
+                HBaseConstants.MASTER_NODE_BOOTSTRAP_MESSAGE);
           } else {
             correctCurrentPhase();
           }
@@ -201,10 +191,6 @@ public class HdfsScheduler implements org.apache.mesos.Scheduler, Runnable {
 
     // TODO (elingg) within each phase, accept offers based on the number of nodes you need
     boolean acceptedOffer = false;
-    boolean journalNodesResolvable = false;
-    if (liveState.getCurrentAcquisitionPhase() == AcquisitionPhase.START_NAME_NODES) {
-      journalNodesResolvable = dnsResolver.journalNodesResolvable();
-    }
     for (Offer offer : offers) {
       if (acceptedOffer) {
         driver.declineOffer(offer.getId());
@@ -214,15 +200,8 @@ public class HdfsScheduler implements org.apache.mesos.Scheduler, Runnable {
             log.info("Declining offers while reconciling tasks");
             driver.declineOffer(offer.getId());
             break;
-          case JOURNAL_NODES:
-            if (tryToLaunchJournalNode(driver, offer)) {
-              acceptedOffer = true;
-            } else {
-              driver.declineOffer(offer.getId());
-            }
-            break;
           case START_NAME_NODES:
-            if (journalNodesResolvable && tryToLaunchNameNode(driver, offer)) {
+            if (tryToLaunchMasterNode(driver, offer)) {
               acceptedOffer = true;
             } else {
               driver.declineOffer(offer.getId());
@@ -339,27 +318,15 @@ public class HdfsScheduler implements org.apache.mesos.Scheduler, Runnable {
 
   private String getNextTaskName(String taskType) {
 
-    if (taskType.equals(HBaseConstants.NAME_NODE_ID)) {
+    if (taskType.equals(HBaseConstants.MASTER_NODE_ID)) {
       Collection<String> nameNodeTaskNames = persistenceStore.getNameNodeTaskNames().values();
-      for (int i = 1; i <= HBaseConstants.TOTAL_NAME_NODES; i++) {
-        if (!nameNodeTaskNames.contains(HBaseConstants.NAME_NODE_ID + i)) {
-          return HBaseConstants.NAME_NODE_ID + i;
+      for (int i = 1; i <= HBaseConstants.TOTAL_MASTER_NODES; i++) {
+        if (!nameNodeTaskNames.contains(HBaseConstants.MASTER_NODE_ID + i)) {
+          return HBaseConstants.MASTER_NODE_ID + i;
         }
       }
       String errorStr = "Cluster is in inconsistent state. " +
           "Trying to launch more namenodes, but they are all already running.";
-      log.error(errorStr);
-      throw new SchedulerException(errorStr);
-    }
-    if (taskType.equals(HBaseConstants.JOURNAL_NODE_ID)) {
-      Collection<String> journalNodeTaskNames = persistenceStore.getJournalNodeTaskNames().values();
-      for (int i = 1; i <= hdfsFrameworkConfig.getJournalNodeCount(); i++) {
-        if (!journalNodeTaskNames.contains(HBaseConstants.JOURNAL_NODE_ID + i)) {
-          return HBaseConstants.JOURNAL_NODE_ID + i;
-        }
-      }
-      String errorStr = "Cluster is in inconsistent state. " +
-          "Trying to launch more journalnodes, but they all are already running.";
       log.error(errorStr);
       throw new SchedulerException(errorStr);
     }
@@ -490,45 +457,7 @@ public class HdfsScheduler implements org.apache.mesos.Scheduler, Runnable {
             .build());
   }
 
-  private boolean tryToLaunchJournalNode(SchedulerDriver driver, Offer offer) {
-    if (offerNotEnoughResources(offer, hdfsFrameworkConfig.getJournalNodeCpus(),
-        hdfsFrameworkConfig.getJournalNodeHeapSize())) {
-      log.info("journal offer does not have enough resources");
-      return false;
-    }
-
-    boolean launch = false;
-    List<String> deadJournalNodes = persistenceStore.getDeadJournalNodes();
-
-    log.info(deadJournalNodes);
-
-    if (deadJournalNodes.isEmpty()) {
-      if (persistenceStore.getJournalNodes().size() == hdfsFrameworkConfig.getJournalNodeCount()) {
-        log.info(String.format("Already running %s journalnodes",
-            hdfsFrameworkConfig.getJournalNodeCount()));
-      } else if (persistenceStore.journalNodeRunningOnSlave(offer.getHostname())) {
-        log.info(String.format("Already running journalnode on %s", offer.getHostname()));
-      } else if (persistenceStore.dataNodeRunningOnSlave(offer.getHostname())) {
-        log.info(String.format("Cannot colocate journalnode and datanode on %s",
-            offer.getHostname()));
-      } else {
-        launch = true;
-      }
-    } else if (deadJournalNodes.contains(offer.getHostname())) {
-      launch = true;
-    }
-    if (launch) {
-      return launchNode(
-          driver,
-          offer,
-          HBaseConstants.JOURNAL_NODE_ID,
-          Arrays.asList(HBaseConstants.JOURNAL_NODE_ID),
-          HBaseConstants.NODE_EXECUTOR_ID);
-    }
-    return false;
-  }
-
-  private boolean tryToLaunchNameNode(SchedulerDriver driver, Offer offer) {
+  private boolean tryToLaunchMasterNode(SchedulerDriver driver, Offer offer) {
     if (offerNotEnoughResources(offer,
         (hdfsFrameworkConfig.getNameNodeCpus() + hdfsFrameworkConfig.getZkfcCpus()),
         (hdfsFrameworkConfig.getNameNodeHeapSize() + hdfsFrameworkConfig.getZkfcHeapSize()))) {
@@ -540,15 +469,12 @@ public class HdfsScheduler implements org.apache.mesos.Scheduler, Runnable {
     List<String> deadNameNodes = persistenceStore.getDeadNameNodes();
 
     if (deadNameNodes.isEmpty()) {
-      if (persistenceStore.getNameNodes().size() == HBaseConstants.TOTAL_NAME_NODES) {
-        log.info(String.format("Already running %s namenodes", HBaseConstants.TOTAL_NAME_NODES));
+      if (persistenceStore.getNameNodes().size() == HBaseConstants.TOTAL_MASTER_NODES) {
+        log.info(String.format("Already running %s namenodes", HBaseConstants.TOTAL_MASTER_NODES));
       } else if (persistenceStore.nameNodeRunningOnSlave(offer.getHostname())) {
         log.info(String.format("Already running namenode on %s", offer.getHostname()));
       } else if (persistenceStore.dataNodeRunningOnSlave(offer.getHostname())) {
         log.info(String.format("Cannot colocate namenode and datanode on %s", offer.getHostname()));
-      } else if (!persistenceStore.journalNodeRunningOnSlave(offer.getHostname())) {
-        log.info(String.format("We need to coloate the namenode with a journalnode and there is"
-            + "no journalnode running on this host. %s", offer.getHostname()));
       } else {
         launch = true;
       }
@@ -556,12 +482,11 @@ public class HdfsScheduler implements org.apache.mesos.Scheduler, Runnable {
       launch = true;
     }
     if (launch) {
-      return launchNode(
-          driver,
+      return launchNode(driver,
           offer,
-          HBaseConstants.NAME_NODE_ID,
-          Arrays.asList(HBaseConstants.NAME_NODE_ID, HBaseConstants.ZKFC_NODE_ID),
-          HBaseConstants.NAME_NODE_EXECUTOR_ID);
+          HBaseConstants.MASTER_NODE_ID,
+          Arrays.asList(HBaseConstants.MASTER_NODE_ID),
+          HBaseConstants.MASTER_NODE_EXECUTOR_ID);
     }
     return false;
   }
@@ -580,8 +505,7 @@ public class HdfsScheduler implements org.apache.mesos.Scheduler, Runnable {
     // entirely?
     if (deadDataNodes.isEmpty()) {
       if (persistenceStore.dataNodeRunningOnSlave(offer.getHostname())
-          || persistenceStore.nameNodeRunningOnSlave(offer.getHostname())
-          || persistenceStore.journalNodeRunningOnSlave(offer.getHostname())) {
+          || persistenceStore.nameNodeRunningOnSlave(offer.getHostname())) {
         log.info(String.format("Already running hdfs task on %s", offer.getHostname()));
       } else {
         launch = true;
@@ -590,11 +514,10 @@ public class HdfsScheduler implements org.apache.mesos.Scheduler, Runnable {
       launch = true;
     }
     if (launch) {
-      return launchNode(
-          driver,
+      return launchNode(driver,
           offer,
-          HBaseConstants.DATA_NODE_ID,
-          Arrays.asList(HBaseConstants.DATA_NODE_ID),
+          HBaseConstants.SLAVE_NODE_ID,
+          Arrays.asList(HBaseConstants.SLAVE_NODE_ID),
           HBaseConstants.NODE_EXECUTOR_ID);
     }
     return false;
@@ -640,9 +563,7 @@ public class HdfsScheduler implements org.apache.mesos.Scheduler, Runnable {
   }
 
   private void correctCurrentPhase() {
-    if (liveState.getJournalNodeSize() < hdfsFrameworkConfig.getJournalNodeCount()) {
-      liveState.transitionTo(AcquisitionPhase.JOURNAL_NODES);
-    } else if (liveState.getNameNodeSize() < HBaseConstants.TOTAL_NAME_NODES) {
+    if (liveState.getNameNodeSize() < HBaseConstants.TOTAL_MASTER_NODES) {
       liveState.transitionTo(AcquisitionPhase.START_NAME_NODES);
     } else if (!liveState.isNameNode1Initialized()
         || !liveState.isNameNode2Initialized()) {
@@ -683,8 +604,6 @@ public class HdfsScheduler implements org.apache.mesos.Scheduler, Runnable {
     @Override
     public void run() {
       log.info("Current persistent state:");
-      log.info(String.format("JournalNodes: %s, %s", persistenceStore.getJournalNodes(),
-          persistenceStore.getJournalNodeTaskNames()));
       log.info(String.format("NameNodes: %s, %s", persistenceStore.getNameNodes(),
           persistenceStore.getNameNodeTaskNames()));
       log.info(String.format("DataNodes: %s", persistenceStore.getDataNodes()));

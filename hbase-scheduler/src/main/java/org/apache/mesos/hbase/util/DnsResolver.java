@@ -29,37 +29,13 @@ public class DnsResolver {
     this.hdfsFrameworkConfig = hdfsFrameworkConfig;
   }
 
-  public boolean journalNodesResolvable() {
-    if (!hdfsFrameworkConfig.usingMesosDns()) {
-      return true;
-    } //short circuit since Mesos handles this otherwise
-    Set<String> hosts = new HashSet<>();
-    for (int i = 1; i <= hdfsFrameworkConfig.getJournalNodeCount(); i++) {
-      hosts.add(HBaseConstants.JOURNAL_NODE_ID + i + "." + hdfsFrameworkConfig.getFrameworkName() +
-        "." + hdfsFrameworkConfig.getMesosDnsDomain());
-    }
-    boolean success = true;
-    for (String host : hosts) {
-      log.info("Resolving DNS for " + host);
-      try {
-        InetAddress.getByName(host);
-        log.info("Successfully found " + host);
-      } catch (SecurityException | IOException e) {
-        log.warn("Couldn't resolve host " + host);
-        success = false;
-        break;
-      }
-    }
-    return success;
-  }
-
   public boolean nameNodesResolvable() {
     if (!hdfsFrameworkConfig.usingMesosDns()) {
       return true;
     } //short circuit since Mesos handles this otherwise
     Set<String> hosts = new HashSet<>();
-    for (int i = 1; i <= HBaseConstants.TOTAL_NAME_NODES; i++) {
-      hosts.add(HBaseConstants.NAME_NODE_ID + i + "." + hdfsFrameworkConfig.getFrameworkName() +
+    for (int i = 1; i <= HBaseConstants.TOTAL_MASTER_NODES; i++) {
+      hosts.add(HBaseConstants.MASTER_NODE_ID + i + "." + hdfsFrameworkConfig.getFrameworkName() +
         "." + hdfsFrameworkConfig.getMesosDnsDomain());
     }
     boolean success = true;

@@ -11,11 +11,6 @@ public enum AcquisitionPhase {
   RECONCILING_TASKS,
 
   /**
-   * Launches and waits for all journalnodes to start.
-   */
-  JOURNAL_NODES,
-
-  /**
    * Launches the both namenodes.
    */
   START_NAME_NODES,

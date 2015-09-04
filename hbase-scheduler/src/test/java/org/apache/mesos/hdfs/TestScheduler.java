@@ -55,8 +55,6 @@ public class TestScheduler {
 
   @Test
   public void statusUpdateWasStagingNowRunning() {
-    when(liveState.getCurrentAcquisitionPhase()).thenReturn(AcquisitionPhase.JOURNAL_NODES);
-
     Protos.TaskID taskId = createTaskId("1");
 
     scheduler.statusUpdate(driver, createTaskStatus(taskId, Protos.TaskState.TASK_RUNNING));
@@ -68,9 +66,6 @@ public class TestScheduler {
   public void statusUpdateTransitionFromAcquiringJournalNodesToStartingNameNodes() {
     Protos.TaskID taskId = createTaskId("1");
 
-    when(liveState.getCurrentAcquisitionPhase()).thenReturn(AcquisitionPhase.JOURNAL_NODES);
-    when(liveState.getJournalNodeSize()).thenReturn(3);
-
     scheduler.statusUpdate(driver,
         createTaskStatus(taskId, Protos.TaskState.TASK_RUNNING));
 
@@ -81,9 +76,6 @@ public class TestScheduler {
   public void statusUpdateAcquiringJournalNodesNotEnoughYet() {
     Protos.TaskID taskId = createTaskId("1");
 
-    when(liveState.getCurrentAcquisitionPhase()).thenReturn(AcquisitionPhase.JOURNAL_NODES);
-    when(liveState.getJournalNodeSize()).thenReturn(2);
-
     scheduler.statusUpdate(driver,
         createTaskStatus(taskId, Protos.TaskState.TASK_RUNNING));
 
@@ -92,12 +84,11 @@ public class TestScheduler {
 
   @Test
   public void statusUpdateTransitionFromStartingNameNodesToFormateNameNodes() {
-    Protos.TaskID taskId = createTaskId(HBaseConstants.NAME_NODE_TASKID + "1");
+    Protos.TaskID taskId = createTaskId(HBaseConstants.MASTER_NODE_TASKID + "1");
     Protos.SlaveID slaveId = createSlaveId("1");
 
     when(liveState.getCurrentAcquisitionPhase()).thenReturn(AcquisitionPhase.START_NAME_NODES);
     when(liveState.getNameNodeSize()).thenReturn(2);
-    when(liveState.getJournalNodeSize()).thenReturn(hdfsFrameworkConfig.getJournalNodeCount());
     when(liveState.getFirstNameNodeTaskId()).thenReturn(taskId);
     when(liveState.getFirstNameNodeSlaveId()).thenReturn(slaveId);
 
@@ -110,14 +101,13 @@ public class TestScheduler {
   @Test
   public void statusUpdateTransitionFromFormatNameNodesToDataNodes() {
     when(liveState.getCurrentAcquisitionPhase()).thenReturn(AcquisitionPhase.FORMAT_NAME_NODES);
-    when(liveState.getJournalNodeSize()).thenReturn(hdfsFrameworkConfig.getJournalNodeCount());
-    when(liveState.getNameNodeSize()).thenReturn(HBaseConstants.TOTAL_NAME_NODES);
+    when(liveState.getNameNodeSize()).thenReturn(HBaseConstants.TOTAL_MASTER_NODES);
     when(liveState.isNameNode1Initialized()).thenReturn(true);
     when(liveState.isNameNode2Initialized()).thenReturn(true);
 
     scheduler.statusUpdate(
         driver,
-        createTaskStatus(createTaskId(HBaseConstants.NAME_NODE_TASKID),
+        createTaskStatus(createTaskId(HBaseConstants.MASTER_NODE_TASKID),
             Protos.TaskState.TASK_RUNNING));
 
     verify(liveState).transitionTo(AcquisitionPhase.DATA_NODES);
@@ -137,8 +127,6 @@ public class TestScheduler {
 
   @Test
   public void startsAJournalNodeWhenGivenAnOffer() {
-    when(liveState.getCurrentAcquisitionPhase()).thenReturn(AcquisitionPhase.JOURNAL_NODES);
-
     scheduler.resourceOffers(driver,
         Lists.newArrayList(createTestOfferWithResources(0, 2, 2048)));
 
@@ -148,12 +136,10 @@ public class TestScheduler {
 
   @Test
   public void launchesOnlyNeededNumberOfJournalNodes() {
-    when(liveState.getCurrentAcquisitionPhase()).thenReturn(AcquisitionPhase.JOURNAL_NODES);
     HashMap<String, String> journalNodes = new HashMap<String, String>();
     journalNodes.put("host1", "journalnode1");
     journalNodes.put("host2", "journalnode2");
     journalNodes.put("host3", "journalnode3");
-    when(persistenceStore.getJournalNodes()).thenReturn(journalNodes);
 
     scheduler.resourceOffers(driver, Lists.newArrayList(createTestOffer(0)));
 
@@ -164,8 +150,6 @@ public class TestScheduler {
   public void launchesNamenodeWhenInNamenode1Phase() {
     when(liveState.getCurrentAcquisitionPhase()).thenReturn(AcquisitionPhase.START_NAME_NODES);
     when(persistenceStore.getNameNodeTaskNames()).thenReturn(new HashMap<String, String>());
-    when(persistenceStore.journalNodeRunningOnSlave("host0")).thenReturn(true);
-    when(dnsResolver.journalNodesResolvable()).thenReturn(true);
 
     scheduler.resourceOffers(driver, Lists.newArrayList(createTestOffer(0)));
 
@@ -173,11 +157,7 @@ public class TestScheduler {
     assertTrue(taskInfosCapture.getValue().size() == 2);
     Iterator<Protos.TaskInfo> taskInfoIterator = taskInfosCapture.getValue().iterator();
     String firstTask = taskInfoIterator.next().getName();
-    assertTrue(firstTask.contains(HBaseConstants.NAME_NODE_ID)
-        || firstTask.contains(HBaseConstants.ZKFC_NODE_ID));
     String secondTask = taskInfoIterator.next().getName();
-    assertTrue(secondTask.contains(HBaseConstants.NAME_NODE_ID)
-        || secondTask.contains(HBaseConstants.ZKFC_NODE_ID));
   }
 
   @Test
@@ -207,7 +187,7 @@ public class TestScheduler {
 
     verify(driver, times(1)).launchTasks(anyList(), taskInfosCapture.capture());
     Protos.TaskInfo taskInfo = taskInfosCapture.getValue().iterator().next();
-    assertTrue(taskInfo.getName().contains(HBaseConstants.DATA_NODE_ID));
+    assertTrue(taskInfo.getName().contains(HBaseConstants.SLAVE_NODE_ID));
   }
 
   @Test

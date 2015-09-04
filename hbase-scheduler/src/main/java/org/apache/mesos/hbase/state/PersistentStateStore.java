@@ -47,11 +47,10 @@ public class PersistentStateStore implements IPersistentStateStore {
     this.hdfsStore = new HdfsZkStore(hdfsFrameworkConfig);
     deadNodeTracker = new DeadNodeTracker(hdfsFrameworkConfig);
 
-    int deadJournalNodes = getDeadJournalNodes().size();
     int deadNameNodes = getDeadNameNodes().size();
     int deadDataNodes = getDeadDataNodes().size();
 
-    deadNodeTracker.resetDeadNodeTimeStamps(deadJournalNodes, deadNameNodes, deadDataNodes);
+    deadNodeTracker.resetDeadNodeTimeStamps(deadNameNodes, deadDataNodes);
   }
 
   @Override
@@ -89,8 +88,7 @@ public class PersistentStateStore implements IPersistentStateStore {
     // TODO (elingg) optimize this method/ Possibly index by task id instead of hostname/
     // Possibly call removeTask(slaveId, taskId) to avoid iterating through all maps
 
-    if (removeTaskIdFromJournalNodes(taskId) ||
-        removeTaskIdFromNameNodes(taskId) ||
+    if (removeTaskIdFromNameNodes(taskId) ||
         removeTaskIdFromDataNodes(taskId)) {
       logger.debug("task id: " + taskId + " removed");
     } else {
@@ -101,16 +99,11 @@ public class PersistentStateStore implements IPersistentStateStore {
   @Override
   public void addHdfsNode(Protos.TaskID taskId, String hostname, String taskType, String taskName) {
     switch (taskType) {
-      case HBaseConstants.NAME_NODE_ID:
+      case HBaseConstants.MASTER_NODE_ID:
         addNameNode(taskId, hostname, taskName);
         break;
-      case HBaseConstants.JOURNAL_NODE_ID:
-        addJournalNode(taskId, hostname, taskName);
-        break;
-      case HBaseConstants.DATA_NODE_ID:
+      case HBaseConstants.SLAVE_NODE_ID:
         addDataNode(taskId, hostname);
-        break;
-      case HBaseConstants.ZKFC_NODE_ID:
         break;
       default:
         logger.error("Task name unknown");
@@ -121,15 +114,6 @@ public class PersistentStateStore implements IPersistentStateStore {
     Map<String, String> dataNodes = getDataNodes();
     dataNodes.put(hostname, taskId.getValue());
     setDataNodes(dataNodes);
-  }
-
-  private void addJournalNode(Protos.TaskID taskId, String hostname, String taskName) {
-    Map<String, String> journalNodes = getJournalNodes();
-    journalNodes.put(hostname, taskId.getValue());
-    setJournalNodes(journalNodes);
-    Map<String, String> journalNodeTaskNames = getJournalNodeTaskNames();
-    journalNodeTaskNames.put(taskId.getValue(), taskName);
-    setJournalNodeTaskNames(journalNodeTaskNames);
   }
 
   private void addNameNode(Protos.TaskID taskId, String hostname, String taskName) {
@@ -144,41 +128,6 @@ public class PersistentStateStore implements IPersistentStateStore {
   @Override
   public Map<String, String> getNameNodeTaskNames() {
     return getNodesMap(NAMENODE_TASKNAMES_KEY);
-  }
-
-  @Override
-  public Map<String, String> getJournalNodeTaskNames() {
-    return getNodesMap(JOURNALNODE_TASKNAMES_KEY);
-  }
-
-  @Override
-  public List<String> getDeadJournalNodes() {
-    List<String> deadJournalHosts = new ArrayList<>();
-
-    if (deadNodeTracker.journalNodeTimerExpired()) {
-      removeDeadJournalNodes();
-    } else {
-      Map<String, String> journalNodes = getJournalNodes();
-      final Set<Map.Entry<String, String>> journalEntries = journalNodes.entrySet();
-      for (Map.Entry<String, String> journalNode : journalEntries) {
-        if (journalNode.getValue() == null) {
-          deadJournalHosts.add(journalNode.getKey());
-        }
-      }
-    }
-    return deadJournalHosts;
-  }
-
-  private void removeDeadJournalNodes() {
-
-    deadNodeTracker.resetJournalNodeTimeStamp();
-    Map<String, String> journalNodes = getJournalNodes();
-    List<String> deadJournalHosts = getDeadJournalNodes();
-    for (String deadJournalHost : deadJournalHosts) {
-      journalNodes.remove(deadJournalHost);
-      logger.info("Removing JN Host: " + deadJournalHost);
-    }
-    setJournalNodes(journalNodes);
   }
 
   @Override
@@ -240,11 +189,6 @@ public class PersistentStateStore implements IPersistentStateStore {
   }
 
   @Override
-  public Map<String, String> getJournalNodes() {
-    return getNodesMap(JOURNALNODES_KEY);
-  }
-
-  @Override
   public Map<String, String> getNameNodes() {
     return getNodesMap(NAMENODES_KEY);
   }
@@ -252,11 +196,6 @@ public class PersistentStateStore implements IPersistentStateStore {
   @Override
   public Map<String, String> getDataNodes() {
     return getNodesMap(DATANODES_KEY);
-  }
-
-  @Override
-  public boolean journalNodeRunningOnSlave(String hostname) {
-    return getJournalNodes().containsKey(hostname);
   }
 
   @Override
@@ -272,10 +211,8 @@ public class PersistentStateStore implements IPersistentStateStore {
   @Override
   public Set<String> getAllTaskIds() {
     Set<String> allTaskIds = new HashSet<String>();
-    Collection<String> journalNodes = getJournalNodes().values();
     Collection<String> nameNodes = getNameNodes().values();
     Collection<String> dataNodes = getDataNodes().values();
-    allTaskIds.addAll(journalNodes);
     allTaskIds.addAll(nameNodes);
     allTaskIds.addAll(dataNodes);
     return allTaskIds;
@@ -293,26 +230,6 @@ public class PersistentStateStore implements IPersistentStateStore {
       logger.error(String.format("Error while getting %s in persistent state", key), e);
       return new HashMap<>();
     }
-  }
-
-  private boolean removeTaskIdFromJournalNodes(String taskId) {
-    boolean nodesModified = false;
-    Map<String, String> journalNodes = getJournalNodes();
-    if (journalNodes.values().contains(taskId)) {
-      for (Map.Entry<String, String> entry : journalNodes.entrySet()) {
-        if (entry.getValue() != null && entry.getValue().equals(taskId)) {
-          journalNodes.put(entry.getKey(), null);
-          setJournalNodes(journalNodes);
-          Map<String, String> journalNodeTaskNames = getJournalNodeTaskNames();
-          journalNodeTaskNames.remove(taskId);
-          setJournalNodeTaskNames(journalNodeTaskNames);
-
-          deadNodeTracker.resetJournalNodeTimeStamp();
-          nodesModified = true;
-        }
-      }
-    }
-    return nodesModified;
   }
 
   private boolean removeTaskIdFromNameNodes(String taskId) {

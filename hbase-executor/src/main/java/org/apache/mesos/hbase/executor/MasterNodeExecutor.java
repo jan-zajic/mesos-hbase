@@ -20,22 +20,19 @@ import java.io.File;
 import java.nio.charset.Charset;
 
 /**
- * The executor for the Primary Name Node Machine.
+ * The executor for the Primary Master Node Machine.
  */
-public class NameNodeExecutor extends AbstractNodeExecutor {
-  private final Log log = LogFactory.getLog(NameNodeExecutor.class);
+public class MasterNodeExecutor extends AbstractNodeExecutor {
 
-  private Task nameNodeTask;
-  // TODO (elingg) better handling in livestate and persistent state of zkfc task. Right now they
-  // are
-  // chained.
-  private Task zkfcNodeTask;
+  private final Log log = LogFactory.getLog(MasterNodeExecutor.class);
+
+  private Task masterNodeTask;
 
   /**
    * The constructor for the primary name node which saves the configuration.
    */
   @Inject
-  NameNodeExecutor(HBaseFrameworkConfig hdfsFrameworkConfig) {
+  MasterNodeExecutor(HBaseFrameworkConfig hdfsFrameworkConfig) {
     super(hdfsFrameworkConfig);
   }
 
@@ -45,7 +42,7 @@ public class NameNodeExecutor extends AbstractNodeExecutor {
   public static void main(String[] args) {
     Injector injector = Guice.createInjector();
     MesosExecutorDriver driver = new MesosExecutorDriver(
-        injector.getInstance(NameNodeExecutor.class));
+        injector.getInstance(MasterNodeExecutor.class));
     System.exit(driver.run() == Status.DRIVER_STOPPED ? 0 : 1);
   }
 
@@ -62,16 +59,10 @@ public class NameNodeExecutor extends AbstractNodeExecutor {
     Task task = new Task(taskInfo);
     log.info(String.format("Launching task, taskId=%s cmd='%s'", taskInfo.getTaskId().getValue(),
         task.getCmd()));
-    if (taskInfo.getTaskId().getValue().contains(HBaseConstants.NAME_NODE_TASKID)) {
-      nameNodeTask = task;
+    if (taskInfo.getTaskId().getValue().contains(HBaseConstants.MASTER_NODE_TASKID)) {
+      masterNodeTask = task;
       driver.sendStatusUpdate(TaskStatus.newBuilder()
-          .setTaskId(nameNodeTask.getTaskInfo().getTaskId())
-          .setState(TaskState.TASK_RUNNING)
-          .build());
-    } else if (taskInfo.getTaskId().getValue().contains(HBaseConstants.ZKFC_NODE_ID)) {
-      zkfcNodeTask = task;
-      driver.sendStatusUpdate(TaskStatus.newBuilder()
-          .setTaskId(zkfcNodeTask.getTaskInfo().getTaskId())
+          .setTaskId(masterNodeTask.getTaskInfo().getTaskId())
           .setState(TaskState.TASK_RUNNING)
           .build());
     }
@@ -81,10 +72,8 @@ public class NameNodeExecutor extends AbstractNodeExecutor {
   public void killTask(ExecutorDriver driver, TaskID taskId) {
     log.info("Killing task : " + taskId.getValue());
     Task task = null;
-    if (taskId.getValue().contains(HBaseConstants.NAME_NODE_TASKID)) {
-      task = nameNodeTask;
-    } else if (taskId.getValue().contains(HBaseConstants.ZKFC_NODE_ID)) {
-      task = zkfcNodeTask;
+    if (taskId.getValue().contains(HBaseConstants.MASTER_NODE_TASKID)) {
+      task = masterNodeTask;
     }
 
     if (task != null && task.getProcess() != null) {
@@ -101,11 +90,8 @@ public class NameNodeExecutor extends AbstractNodeExecutor {
   public void shutdown(ExecutorDriver d) {
     // TODO(elingg) let's shut down the driver more gracefully
     log.info("Executor asked to shutdown");
-    if (nameNodeTask != null) {
-      killTask(d, nameNodeTask.getTaskInfo().getTaskId());
-    }
-    if (zkfcNodeTask != null) {
-      killTask(d, zkfcNodeTask.getTaskInfo().getTaskId());
+    if (masterNodeTask != null) {
+      killTask(d, masterNodeTask.getTaskInfo().getTaskId());
     }
   }
 
@@ -114,9 +100,9 @@ public class NameNodeExecutor extends AbstractNodeExecutor {
     super.frameworkMessage(driver, msg);
     String messageStr = new String(msg, Charset.defaultCharset());
     File nameDir = new File(hdfsFrameworkConfig.getDataDir() + "/name");
-    if (messageStr.equals(HBaseConstants.NAME_NODE_INIT_MESSAGE)
-        || messageStr.equals(HBaseConstants.NAME_NODE_BOOTSTRAP_MESSAGE)) {
-      if (nameDir.exists() && messageStr.equals(HBaseConstants.NAME_NODE_INIT_MESSAGE)) {
+    if (messageStr.equals(HBaseConstants.MASTER_NODE_INIT_MESSAGE)
+        || messageStr.equals(HBaseConstants.MASTER_NODE_BOOTSTRAP_MESSAGE)) {
+      if (nameDir.exists() && messageStr.equals(HBaseConstants.MASTER_NODE_INIT_MESSAGE)) {
         log.info(String
             .format("NameNode data directory %s already exists, not formatting",
                 nameDir));
@@ -127,12 +113,11 @@ public class NameNodeExecutor extends AbstractNodeExecutor {
           log.error(errorMsg);
           throw new ExecutorException(errorMsg);
         }
-        runCommand(driver, nameNodeTask, "bin/hdfs-mesos-namenode " + messageStr);
+        runCommand(driver, masterNodeTask, "bin/hdfs-mesos-namenode " + messageStr);
       }
-      startProcess(driver, nameNodeTask);
-      startProcess(driver, zkfcNodeTask);
+      startProcess(driver, masterNodeTask);
       driver.sendStatusUpdate(TaskStatus.newBuilder()
-          .setTaskId(nameNodeTask.getTaskInfo().getTaskId())
+          .setTaskId(masterNodeTask.getTaskInfo().getTaskId())
           .setState(TaskState.TASK_RUNNING)
           .setMessage(messageStr)
           .build());
