@@ -1,6 +1,5 @@
-rootProject.name = 'hdfs'
+rootProject.name = 'hbase'
 
-
-include "hdfs-commons"
-include "hdfs-scheduler"
-include "hdfs-executor"
+include "hbase-commons"
+include "hbase-scheduler"
+include "hbase-executor"
