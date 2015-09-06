@@ -217,7 +217,7 @@ public class HBaseFrameworkConfig {
   }
 
   public String getHdfsNameServerPort() {
-    return getConf().get("hbase.rootdir.hdfs.nameserver.port", "8020");
+    return getConf().get("hbase.rootdir.hdfs.nameserver.port", "50071");
   }
 
   public String getStateZkServers() {

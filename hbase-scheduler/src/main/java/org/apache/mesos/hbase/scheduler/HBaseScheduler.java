@@ -172,7 +172,8 @@ public class HBaseScheduler implements org.apache.mesos.Scheduler, Runnable {
         case RECONCILING_TASKS:
           break;
         case START_MASTER_NODES:
-          if (liveState.getNameNodeSize() == HBaseConstants.TOTAL_MASTER_NODES) {
+          if (liveState.getNameNodeSize() == HBaseConstants.TOTAL_MASTER_NODES)
+          {
             // TODO (elingg) move the reload to correctCurrentPhase and make it idempotent
             reloadConfigsOnAllRunningTasks(driver);
             correctCurrentPhase();
@@ -303,7 +304,7 @@ public class HBaseScheduler implements org.apache.mesos.Scheduler, Runnable {
         .setName(taskName)
         .setTaskId(taskId)
         .setSlaveId(offer.getSlaveId())
-        .addAllResources(taskResources)
+        .addAllResources(taskResources) 
         .setData(ByteString.copyFromUtf8(
           String.format("bin/hbase-mesos-%s", taskType)))
         .build();
