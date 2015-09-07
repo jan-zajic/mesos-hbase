@@ -59,7 +59,10 @@ public class PersistentStateStore implements IPersistentStateStore {
   public void setFrameworkId(Protos.FrameworkID id) {
 
     try {
-      hdfsStore.setRawValueForId(FRAMEWORK_ID_KEY, id.toByteArray());
+      if(id == null)
+        hdfsStore.setRawValueForId(FRAMEWORK_ID_KEY, new byte[]{});
+      else
+        hdfsStore.setRawValueForId(FRAMEWORK_ID_KEY, id.toByteArray());
     } catch (ExecutionException | InterruptedException e) {
       logger.error("Unable to set frameworkId", e);
       throw new PersistenceException(e);
