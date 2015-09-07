@@ -1,5 +1,6 @@
 package org.apache.mesos.hbase.state;
 
+import com.google.inject.Inject;
 import org.apache.commons.lang.time.DateUtils;
 
 import java.sql.Timestamp;
@@ -21,6 +22,7 @@ public class DeadNodeTracker {
 
   private HBaseFrameworkConfig hdfsFrameworkConfig;
 
+  @Inject
   public DeadNodeTracker(HBaseFrameworkConfig hdfsFrameworkConfig) {
     this.hdfsFrameworkConfig = hdfsFrameworkConfig;
     initializeTimestampMap();

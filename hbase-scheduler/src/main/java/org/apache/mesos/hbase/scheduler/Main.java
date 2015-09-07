@@ -17,7 +17,7 @@ public class Main {
     new Main().start();
   }
 
-  private void start() {
+  void start() {
     Injector injector = Guice.createInjector(new HBaseSchedulerModule());
     getSchedulerThread(injector).start();
     injector.getInstance(ConfigServer.class);

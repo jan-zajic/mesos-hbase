@@ -36,6 +36,7 @@ if [ "$1" == "install" ]; then
     echo "Illegal number of parameters, usage: install DIR"
   fi
   INSTALL_DIRECTORY=$2
+  echo "install dir is: $INSTALL_DIRECTORY"
 fi
 
 mkdir $BUILD_DIR

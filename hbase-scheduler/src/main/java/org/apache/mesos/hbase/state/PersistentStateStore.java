@@ -31,22 +31,24 @@ import static org.apache.mesos.hbase.util.NodeTypes.*;
 public class PersistentStateStore implements IPersistentStateStore {
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
+  
   private IHBaseStore hdfsStore;
+  
   private DeadNodeTracker deadNodeTracker;
-
+  
   private static final String FRAMEWORK_ID_KEY = "frameworkId";
   private static final String NAMENODE_TASKNAMES_KEY = "nameNodeTaskNames";
-  private static final String JOURNALNODE_TASKNAMES_KEY = "journalNodeTaskNames";
-
+  
   // TODO (elingg) we need to also track ZKFC's state
   // TODO (nicgrayson) add tests with in-memory state implementation for zookeeper
-
+  
   @Inject
-  public PersistentStateStore(HBaseFrameworkConfig hdfsFrameworkConfig) {
-    MesosNativeLibrary.load(hdfsFrameworkConfig.getNativeLibrary());
-    this.hdfsStore = new HBaseZkStore(hdfsFrameworkConfig);
-    deadNodeTracker = new DeadNodeTracker(hdfsFrameworkConfig);
-
+  public PersistentStateStore(HBaseFrameworkConfig hdfsFrameworkConfig, IHBaseStore hdfsStore, DeadNodeTracker deadNodeTracker) {
+    if(!HBaseConstants.isDevelopmentMode())
+        MesosNativeLibrary.load(hdfsFrameworkConfig.getNativeLibrary());
+    this.hdfsStore = hdfsStore;
+    this.deadNodeTracker = deadNodeTracker;
+    
     int deadNameNodes = getDeadNameNodes().size();
     int deadDataNodes = getDeadDataNodes().size();
 

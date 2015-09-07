@@ -167,7 +167,7 @@ public class HBaseScheduler implements org.apache.mesos.Scheduler, Runnable {
       
       log.info(String.format("Current Acquisition Phase: %s", liveState
           .getCurrentAcquisitionPhase().toString()));
-
+      
       switch (liveState.getCurrentAcquisitionPhase()) {
         case RECONCILING_TASKS:
           break;

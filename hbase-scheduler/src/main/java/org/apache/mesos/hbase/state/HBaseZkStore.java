@@ -1,5 +1,6 @@
 package org.apache.mesos.hbase.state;
 
+import com.google.inject.Inject;
 import org.apache.commons.io.IOUtils;
 import org.apache.mesos.state.State;
 import org.apache.mesos.state.Variable;
@@ -23,6 +24,7 @@ public class HBaseZkStore implements IHBaseStore {
 
   private State state;
 
+  @Inject
   public HBaseZkStore(HBaseFrameworkConfig hdfsFrameworkConfig) {
 
     this.state = new ZooKeeperState(hdfsFrameworkConfig.getStateZkServers(),

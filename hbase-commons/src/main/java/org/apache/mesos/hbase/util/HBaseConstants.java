@@ -8,6 +8,8 @@ public final class HBaseConstants {
   // Total number of master nodes
   public static final Integer TOTAL_MASTER_NODES = 1;
 
+  public static final String DEVELOPMENT_MODE_PROPERTY = "mesos.hbase.devel";
+  
   // Messages
   public static final String RELOAD_CONFIG = "reload config";
 
@@ -36,4 +38,10 @@ public final class HBaseConstants {
   
   private HBaseConstants() {
   }
+  
+  public static boolean isDevelopmentMode()
+  {
+      return System.getProperty("mesos.hbase.devel") != null;
+  }
+  
 }
