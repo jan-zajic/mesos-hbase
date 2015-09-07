@@ -78,6 +78,30 @@ public class ConfigServer {
     public synchronized void handle(String target, Request baseRequest, HttpServletRequest request,
       HttpServletResponse response) throws IOException {
 
+      String pathRequested = request.getPathInfo();
+      if(pathRequested.equalsIgnoreCase(HBaseConstants.HBASE_CONFIG_FILE_NAME))
+      {
+          handleHbaseSite(baseRequest, request, response);
+      } else if(pathRequested.equalsIgnoreCase(HBaseConstants.REGION_SERVERS_FILENAME)) {
+          handleRegionServers(baseRequest, request, response);
+      } else {
+          response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+          baseRequest.setHandled(true);         
+      }
+    }
+
+    private String getHbaseRootDir()
+    {
+        if(hdfsFrameworkConfig.usingMesosHdfs())
+        {
+            return "hdfs://"+hdfsFrameworkConfig.getDfsNameServices()+"/hbase";
+        } else {
+            return hdfsFrameworkConfig.getHbaseRootDir();
+        }
+    }
+
+    private void handleHbaseSite(Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException     
+    {
       File confFile = new File(hdfsFrameworkConfig.getConfigPath());
 
       if (!confFile.exists()) {
@@ -120,14 +144,29 @@ public class ConfigServer {
       response.getWriter().println(content);
     }
 
-    private String getHbaseRootDir()
+    private void handleRegionServers(Request baseRequest, HttpServletRequest request, HttpServletResponse response)
+            throws IOException
     {
-        if(hdfsFrameworkConfig.usingMesosHdfs())
+        StringBuilder content = new StringBuilder();
+        
+        Set<String> regionNodes = new TreeSet<>();
+        regionNodes.addAll(persistenceStore.getRegionNodes().keySet());  
+        
+        for(String regionNode : regionNodes)
         {
-            return "hdfs://"+hdfsFrameworkConfig.getDfsNameServices()+"/hbase";
-        } else {
-            return hdfsFrameworkConfig.getHbaseRootDir();
+            content.append(regionNode).append('\n');
         }
+
+        response.setContentType("application/octet-stream;charset=utf-8");
+        response.setHeader("Content-Disposition", "attachment; filename=\"" +
+          HBaseConstants.REGION_SERVERS_FILENAME + "\" ");
+        response.setHeader("Content-Transfer-Encoding", "binary");
+        response.setHeader("Content-Length", Integer.toString(content.length()));
+        
+        response.setStatus(HttpServletResponse.SC_OK);
+        baseRequest.setHandled(true);
+        response.getWriter().println(content);
     }
+    
   }
 }

@@ -208,13 +208,19 @@ public abstract class AbstractNodeExecutor implements Executor {
    * Reloads the cluster configuration so the executor has the correct configuration info.
    */
   protected void reloadConfig() {
+      reloadConfig("hbase-site.xml");
+      reloadConfig("regionservers");
+  }
+  
+  protected void reloadConfig(String filename) 
+  {
     if (hdfsFrameworkConfig.usingNativeHadoopBinaries()) {
       return;
     }
     // Find config URI
     String configUri = "";
     for (CommandInfo.URI uri : executorInfo.getCommand().getUrisList()) {
-      if (uri.getValue().contains("hbase-site.xml")) {
+      if (uri.getValue().contains(filename)) {
         configUri = uri.getValue();
       }
     }
@@ -222,10 +228,11 @@ public abstract class AbstractNodeExecutor implements Executor {
       log.error("Couldn't find hbase-site.xml URI");
       return;
     }
+    
     try {
-      log.info(String.format("Reloading hbase-site.xml from %s", configUri));
+      log.info(String.format("Reloading "+filename+" from %s", configUri));
       ProcessBuilder processBuilder = new ProcessBuilder("sh", "-c",
-        String.format("curl -o hbase-site.xml %s && mv hbase-site.xml conf/", configUri));
+        String.format("curl -o "+filename+" %s && mv "+filename+" conf/", configUri));
       Process process = processBuilder.start();
       //TODO(nicgrayson) check if the config has changed
       redirectProcess(process);

@@ -164,7 +164,7 @@ public class HBaseScheduler implements org.apache.mesos.Scheduler, Runnable {
       }
     } else if (isRunningState(status)) {
       liveState.updateTaskForStatus(status);
-
+      
       log.info(String.format("Current Acquisition Phase: %s", liveState
           .getCurrentAcquisitionPhase().toString()));
 
@@ -181,6 +181,7 @@ public class HBaseScheduler implements org.apache.mesos.Scheduler, Runnable {
           break;
         // TODO (elingg) add a configurable number of data nodes
         case SLAVE_NODES:
+          reloadConfigsOnAllRunningTasks(driver); //all nodes need fetch HBaseConstants.REGION_SERVERS_FILENAME
           break;
       }
     } else {
@@ -353,13 +354,21 @@ public class HBaseScheduler implements org.apache.mesos.Scheduler, Runnable {
         .addAllResources(resources)
         .setCommand(CommandInfo
             .newBuilder()
-            .addAllUris(Arrays.asList(CommandInfo.URI
-                .newBuilder()
-                .setValue(String.format("http://%s:%d/%s",
-                    hbaseFrameworkConfig.getFrameworkHostAddress(),
-                    confServerPort,
-                    HBaseConstants.HBASE_BINARY_FILE_NAME))
-                .build(),
+            .addAllUris(Arrays.asList(
+                CommandInfo.URI
+                    .newBuilder()
+                    .setValue(String.format("http://%s:%d/%s",
+                        hbaseFrameworkConfig.getFrameworkHostAddress(),
+                        confServerPort,
+                        HBaseConstants.HBASE_BINARY_FILE_NAME))
+                    .build(),
+                CommandInfo.URI
+                    .newBuilder()
+                    .setValue(String.format("http://%s:%d/%s",
+                        hbaseFrameworkConfig.getFrameworkHostAddress(),
+                        confServerPort,
+                        HBaseConstants.REGION_SERVERS_FILENAME))
+                    .build(),
                 CommandInfo.URI
                     .newBuilder()
                     .setValue(String.format("http://%s:%d/%s",
@@ -612,7 +621,7 @@ public class HBaseScheduler implements org.apache.mesos.Scheduler, Runnable {
       log.info("Current persistent state:");
       log.info(String.format("NameNodes: %s, %s", persistenceStore.getPrimaryNodes(),
           persistenceStore.getPrimaryNodeTaskNames()));
-      log.info(String.format("DataNodes: %s", persistenceStore.getDataNodes()));
+      log.info(String.format("DataNodes: %s", persistenceStore.getRegionNodes()));
 
       Set<String> taskIds = persistenceStore.getAllTaskIds();
       Set<String> runningTaskIds = liveState.getRunningTasks().keySet();

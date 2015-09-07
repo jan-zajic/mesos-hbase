@@ -111,7 +111,7 @@ public class PersistentStateStore implements IPersistentStateStore {
   }
 
   private void addDataNode(Protos.TaskID taskId, String hostname) {
-    Map<String, String> dataNodes = getDataNodes();
+    Map<String, String> dataNodes = getRegionNodes();
     dataNodes.put(hostname, taskId.getValue());
     setDataNodes(dataNodes);
   }
@@ -166,7 +166,7 @@ public class PersistentStateStore implements IPersistentStateStore {
     if (deadNodeTracker.slaveNodeTimerExpired()) {
       removeDeadDataNodes();
     } else {
-      Map<String, String> dataNodes = getDataNodes();
+      Map<String, String> dataNodes = getRegionNodes();
       final Set<Map.Entry<String, String>> dataNodeEntries = dataNodes.entrySet();
       for (Map.Entry<String, String> dataNode : dataNodeEntries) {
         if (dataNode.getValue() == null) {
@@ -179,7 +179,7 @@ public class PersistentStateStore implements IPersistentStateStore {
 
   private void removeDeadDataNodes() {
     deadNodeTracker.resetDataNodeTimeStamp();
-    Map<String, String> dataNodes = getDataNodes();
+    Map<String, String> dataNodes = getRegionNodes();
     List<String> deadDataHosts = getDeadDataNodes();
     for (String deadDataHost : deadDataHosts) {
       dataNodes.remove(deadDataHost);
@@ -192,15 +192,15 @@ public class PersistentStateStore implements IPersistentStateStore {
   public Map<String, String> getPrimaryNodes() {
     return getNodesMap(MASTERNODES_KEY);
   }
-
+  
   @Override
-  public Map<String, String> getDataNodes() {
+  public Map<String, String> getRegionNodes() {
     return getNodesMap(SLAVENODES_KEY);
   }
 
   @Override
   public boolean dataNodeRunningOnSlave(String hostname) {
-    return getDataNodes().containsKey(hostname);
+    return getRegionNodes().containsKey(hostname);
   }
 
   @Override
@@ -212,7 +212,7 @@ public class PersistentStateStore implements IPersistentStateStore {
   public Set<String> getAllTaskIds() {
     Set<String> allTaskIds = new HashSet<String>();
     Collection<String> nameNodes = getPrimaryNodes().values();
-    Collection<String> dataNodes = getDataNodes().values();
+    Collection<String> dataNodes = getRegionNodes().values();
     allTaskIds.addAll(nameNodes);
     allTaskIds.addAll(dataNodes);
     return allTaskIds;
@@ -256,7 +256,7 @@ public class PersistentStateStore implements IPersistentStateStore {
   private boolean removeTaskIdFromDataNodes(String taskId) {
     boolean nodesModified = false;
 
-    Map<String, String> dataNodes = getDataNodes();
+    Map<String, String> dataNodes = getRegionNodes();
     if (dataNodes.values().contains(taskId)) {
       for (Map.Entry<String, String> entry : dataNodes.entrySet()) {
         if (entry.getValue() != null && entry.getValue().equals(taskId)) {
