@@ -101,8 +101,8 @@ public class ConfigServer {
         model.put("primary2Hostname", iter.next());
       }
       
-      model.put("nameServerAddress", hdfsFrameworkConfig.getHdfsNameServerAddress());
-      model.put("nameServerPort", hdfsFrameworkConfig.getHdfsNameServerPort());      
+      model.put("hbase.rootdir", getHbaseRootDir());      
+      
       model.put("frameworkName", hdfsFrameworkConfig.getFrameworkName());
       model.put("dataDir", hdfsFrameworkConfig.getDataDir());
       model.put("haZookeeperQuorum", hdfsFrameworkConfig.getHaZookeeperQuorum());
@@ -118,6 +118,16 @@ public class ConfigServer {
       response.setStatus(HttpServletResponse.SC_OK);
       baseRequest.setHandled(true);
       response.getWriter().println(content);
+    }
+
+    private String getHbaseRootDir()
+    {
+        if(hdfsFrameworkConfig.usingMesosHdfs())
+        {
+            return "hdfs://"+hdfsFrameworkConfig.getDfsNameServices()+"/hbase";
+        } else {
+            return hdfsFrameworkConfig.getHbaseRootDir();
+        }
     }
   }
 }

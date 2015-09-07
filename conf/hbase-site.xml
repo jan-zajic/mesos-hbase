@@ -4,10 +4,10 @@
   <property>
     <name>hbase.master</name>
     <value>${primary1Hostname}:60000</value>
-  </property> 
+  </property>
   <property>
     <name>hbase.rootdir</name>
-    <value>hdfs://${nameServerAddress}:${nameServerPort}/hbase</value>
+    <value>${hbase.rootdir}</value>
   </property>
   <property>
     <name>hbase.cluster.distributed</name>

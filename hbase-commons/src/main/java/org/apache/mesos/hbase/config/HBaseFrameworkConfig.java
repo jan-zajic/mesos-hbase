@@ -212,12 +212,16 @@ public class HBaseFrameworkConfig {
     return getConf().get("mesos.hbase.zkfc.ha.zookeeper.quorum", "localhost:2181");
   }
 
-  public String getHdfsNameServerAddress() {
-    return getConf().get("hbase.rootdir.hdfs.nameserver.address", "localhost");
+  public String getHbaseRootDir() {
+    return getConf().get("hbase.rootdir", "file:///var/hbase/data");
   }
 
-  public String getHdfsNameServerPort() {
-    return getConf().get("hbase.rootdir.hdfs.nameserver.port", "50071");
+  public Boolean usingMesosHdfs() {
+    return Boolean.valueOf(getConf().get("mesos.hbase.mesoshdfs", "true"));
+  }
+  
+  public String getDfsNameServices() {
+    return getConf().get("dfs.nameservices", "hdfs");
   }
 
   public String getStateZkServers() {
