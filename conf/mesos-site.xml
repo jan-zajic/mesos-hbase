@@ -84,6 +84,12 @@
   </property>
 
   <property>
+    <name>mesos.hbase.mesoshdfs</name>
+    <description>Whether HDFS run on mesos too</description>
+    <value>true</value>
+  </property>
+  
+  <property>
     <name>mesos.hbase.mesosdns.domain</name>
     <description>Root domain name of Mesos DNS (usually 'mesos')</description>
     <value>mesos</value>
