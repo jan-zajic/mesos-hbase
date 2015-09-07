@@ -149,6 +149,14 @@ public class ConfigServer {
     {
         StringBuilder content = new StringBuilder();
         
+        Set<String> primaryNodes = new TreeSet<>();
+        primaryNodes.addAll(persistenceStore.getPrimaryNodes().keySet());
+        
+        for(String primaryNode : primaryNodes)
+        {
+            content.append(primaryNode).append('\n');
+        }
+        
         Set<String> regionNodes = new TreeSet<>();
         regionNodes.addAll(persistenceStore.getRegionNodes().keySet());  
         
