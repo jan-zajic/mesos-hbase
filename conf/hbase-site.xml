@@ -7,7 +7,7 @@
   </property>
   <property>
     <name>hbase.rootdir</name>
-    <value>${hbase.rootdir}</value>
+    <value>${hbaseRootDir}</value>
   </property>
   <property>
     <name>hbase.cluster.distributed</name>

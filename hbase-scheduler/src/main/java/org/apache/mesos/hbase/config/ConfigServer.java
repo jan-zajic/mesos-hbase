@@ -109,7 +109,7 @@ public class ConfigServer {
           + ". Please make sure it exists.");
       }
 
-      String content = new String(Files.readAllBytes(Paths.get(confFile.getPath())), Charset.defaultCharset());
+      String view = new String(Files.readAllBytes(Paths.get(confFile.getPath())), Charset.defaultCharset());
 
       Set<String> primaryNodes = new TreeSet<>();
       primaryNodes.addAll(persistenceStore.getPrimaryNodes().keySet());
@@ -125,13 +125,13 @@ public class ConfigServer {
         model.put("primary2Hostname", iter.next());
       }
       
-      model.put("hbase.rootdir", getHbaseRootDir());      
+      model.put("hbaseRootDir", getHbaseRootDir());      
       
       model.put("frameworkName", hdfsFrameworkConfig.getFrameworkName());
       model.put("dataDir", hdfsFrameworkConfig.getDataDir());
       model.put("haZookeeperQuorum", hdfsFrameworkConfig.getHaZookeeperQuorum());
 
-      content = engine.transform(content, model);
+      String content = engine.transform(view, model);
 
       response.setContentType("application/octet-stream;charset=utf-8");
       response.setHeader("Content-Disposition", "attachment; filename=\"" +
