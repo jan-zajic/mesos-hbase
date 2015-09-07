@@ -127,13 +127,14 @@ tar pczf $DIST.tgz $DIST
 
 echo "HDFS framework build complete: $BUILD_DIR/$DIST.tgz"
 
-if [ -d $INSTALL_DIRECTORY ]; then
-	echo "installing mesos hbase into directory: $INSTALL_DIRECTORY/$DIST"
-	cp $BUILD_DIR/$DIST.tgz $INSTALL_DIRECTORY
-	cd $INSTALL_DIRECTORY
-	tar -xf $DIST.tgz
-else
-	echo "installation directory $INSTALL_DIRECTORY doesn't exists!"
+if [ -n "$INSTALL_DIRECTORY" ]; then
+	if [ -d $INSTALL_DIRECTORY ]; then
+		echo "installing mesos hbase into directory: $INSTALL_DIRECTORY/$DIST"
+		cp $BUILD_DIR/$DIST.tgz $INSTALL_DIRECTORY
+		cd $INSTALL_DIRECTORY
+		tar -xf $DIST.tgz
+	else
+		echo "installation directory $INSTALL_DIRECTORY doesn't exists!"
+	fi
 fi
-
 
