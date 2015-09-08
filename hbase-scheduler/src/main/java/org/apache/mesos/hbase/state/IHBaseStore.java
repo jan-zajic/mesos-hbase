@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 
 /**
- * Interface for storing and retrieving HDFS tracker resources.
+ * Interface for storing and retrieving Hbase tracker resources.
  */
 public interface IHBaseStore {
 

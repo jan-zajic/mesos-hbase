@@ -26,7 +26,7 @@ public enum AcquisitionPhase {
 
   /**
    * If everything is healthy the scheduler stays here and tries to launch
-   * datanodes on any slave that doesn't have an hdfs task running on it.
+   * datanodes on any slave that doesn't have an hbase task running on it.
    */
   SLAVE_NODES
 }

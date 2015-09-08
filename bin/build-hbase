@@ -127,7 +127,7 @@ chmod -R a+r .
 echo Creating $DIST.tgz while retaining permissions 
 tar pczf $DIST.tgz $DIST
 
-echo "HDFS framework build complete: $BUILD_DIR/$DIST.tgz"
+echo "HBase framework build complete: $BUILD_DIR/$DIST.tgz"
 
 if [ -n "$INSTALL_DIRECTORY" ]; then
 	if [ -d $INSTALL_DIRECTORY ]; then

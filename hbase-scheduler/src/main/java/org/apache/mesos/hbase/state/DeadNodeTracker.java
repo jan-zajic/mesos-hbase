@@ -21,12 +21,12 @@ public class DeadNodeTracker
   private String[] nodes = {
       MASTERNODES_KEY, SLAVENODES_KEY};
 
-  private HBaseFrameworkConfig hdfsFrameworkConfig;
+  private HBaseFrameworkConfig hbaseFrameworkConfig;
 
   @Inject
-  public DeadNodeTracker(HBaseFrameworkConfig hdfsFrameworkConfig)
+  public DeadNodeTracker(HBaseFrameworkConfig hbaseFrameworkConfig)
   {
-    this.hdfsFrameworkConfig = hdfsFrameworkConfig;
+    this.hbaseFrameworkConfig = hbaseFrameworkConfig;
     initializeTimestampMap();
   }
 
@@ -40,7 +40,7 @@ public class DeadNodeTracker
 
   private void resetNodeTimeStamp(String nodeType)
   {
-    Date date = DateUtils.addSeconds(new Date(), hdfsFrameworkConfig.getDeadNodeTimeout());
+    Date date = DateUtils.addSeconds(new Date(), hbaseFrameworkConfig.getDeadNodeTimeout());
     timestampMap.put(nodeType, new Timestamp(date.getTime()));
   }
 

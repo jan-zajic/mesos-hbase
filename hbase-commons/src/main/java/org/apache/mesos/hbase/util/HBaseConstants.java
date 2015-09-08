@@ -1,7 +1,7 @@
 package org.apache.mesos.hbase.util;
 
 /**
- * Constants for HDFS.
+ * Constants for HBase Mesos framework.
  */
 public final class HBaseConstants {
 
@@ -30,9 +30,9 @@ public final class HBaseConstants {
   // Current HDFS Binary File Name
   public static final String HBASE_BINARY_FILE_NAME = "hbase-mesos-executor-0.1.0.tgz";
 
-  // HDFS Config File Name
+  // HBase Config File Name
   public static final String HBASE_CONFIG_FILE_NAME = "hbase-site.xml";
-
+  // HDFS Config File Name
   public static final String HDFS_CONFIG_FILE_NAME = "hdfs-site.xml";
 
   // region servers file name

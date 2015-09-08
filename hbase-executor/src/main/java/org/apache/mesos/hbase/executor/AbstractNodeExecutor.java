@@ -34,20 +34,20 @@ import java.nio.file.Paths;
 import org.apache.mesos.hbase.config.HBaseFrameworkConfig;
 
 /**
- * The base for several types of HDFS executors.  It also contains the main which is consistent for all executors.
+ * The base for several types of HBase executors.  It also contains the main which is consistent for all executors.
  */
 public abstract class AbstractNodeExecutor implements Executor {
 
   private final Log log = LogFactory.getLog(AbstractNodeExecutor.class);
   protected ExecutorInfo executorInfo;
-  protected HBaseFrameworkConfig hdfsFrameworkConfig;
+  protected HBaseFrameworkConfig hbaseFrameworkConfig;
 
   /**
    * Constructor which takes in configuration.
    */
   @Inject
-  AbstractNodeExecutor(HBaseFrameworkConfig hdfsFrameworkConfig) {
-    this.hdfsFrameworkConfig = hdfsFrameworkConfig;
+  AbstractNodeExecutor(HBaseFrameworkConfig hbaseFrameworkConfig) {
+    this.hbaseFrameworkConfig = hbaseFrameworkConfig;
   }
 
   /**
@@ -68,7 +68,7 @@ public abstract class AbstractNodeExecutor implements Executor {
       FrameworkInfo frameworkInfo, SlaveInfo slaveInfo) {
     // Set up data dir
     setUpDataDir();
-    if (!hdfsFrameworkConfig.usingNativeHadoopBinaries()) {
+    if (!hbaseFrameworkConfig.usingNativeHadoopBinaries()) {
       createSymbolicLink();
     }
     log.info("Executor registered with the slave");
@@ -79,36 +79,36 @@ public abstract class AbstractNodeExecutor implements Executor {
    */
   private void setUpDataDir() {
     // Create primary data dir if it does not exist
-    File dataDir = new File(hdfsFrameworkConfig.getDataDir());
+    File dataDir = new File(hbaseFrameworkConfig.getDataDir());
     FileUtils.createDir(dataDir);
 
     // Create secondary data dir if it does not exist
-    File secondaryDataDir = new File(hdfsFrameworkConfig.getSecondaryDataDir());
+    File secondaryDataDir = new File(hbaseFrameworkConfig.getSecondaryDataDir());
     FileUtils.createDir(secondaryDataDir);
   }
 
   /**
-   * Create Symbolic Link for the HDFS binary.
+   * Create Symbolic Link for the HBase binary.
    */
   private void createSymbolicLink() {
-    log.info("Creating a symbolic link for HDFS binary");
+    log.info("Creating a symbolic link for HBase binary");
     try {
-      // Find Hdfs binary in sandbox
-      File sandboxHdfsBinary = new File(System.getProperty("user.dir"));
-      Path sandboxHdfsBinaryPath = Paths.get(sandboxHdfsBinary.getAbsolutePath());
+      // Find HBase binary in sandbox
+      File sandboxHBaseBinary = new File(System.getProperty("user.dir"));
+      Path sandboxHBaseBinaryPath = Paths.get(sandboxHBaseBinary.getAbsolutePath());
 
       // Create mesosphere opt dir (parent dir of the symbolic link) if it does not exist
-      File frameworkMountDir = new File(hdfsFrameworkConfig.getFrameworkMountPath());
+      File frameworkMountDir = new File(hbaseFrameworkConfig.getFrameworkMountPath());
       FileUtils.createDir(frameworkMountDir);
 
       // Delete and recreate directory for symbolic link every time
-      String hdfsBinaryPath = hdfsFrameworkConfig.getFrameworkMountPath()
+      String hbaseBinaryPath = hbaseFrameworkConfig.getFrameworkMountPath()
         + "/" + HBaseConstants.HBASE_BINARY_DIR;
-      File hdfsBinaryDir = new File(hdfsBinaryPath);
+      File hbaseBinaryDir = new File(hbaseBinaryPath);
 
       // Try to delete the symbolic link in case a dangling link is present
       try {
-        ProcessBuilder processBuilder = new ProcessBuilder("unlink", hdfsBinaryPath);
+        ProcessBuilder processBuilder = new ProcessBuilder("unlink", hbaseBinaryPath);
         Process process = processBuilder.start();
         redirectProcess(process);
         int exitCode = process.waitFor();
@@ -116,41 +116,41 @@ public abstract class AbstractNodeExecutor implements Executor {
           log.info("Unable to unlink old sym link. Link may not exist. Exit code: " + exitCode);
         }
       } catch (IOException e) {
-        log.fatal("Could not unlink " + hdfsBinaryPath, e);
+        log.fatal("Could not unlink " + hbaseBinaryPath, e);
         throw e;
       }
 
       // Delete the file if it exists
-      if (hdfsBinaryDir.exists() && !FileUtils.deleteDirectory(hdfsBinaryDir)) {
-        String msg = "Unable to delete file: " + hdfsBinaryDir;
+      if (hbaseBinaryDir.exists() && !FileUtils.deleteDirectory(hbaseBinaryDir)) {
+        String msg = "Unable to delete file: " + hbaseBinaryDir;
         log.error(msg);
         throw new ExecutorException(msg);
       }
 
       // Create symbolic link
-      Path hdfsLinkDirPath = Paths.get(hdfsBinaryPath);
-      Files.createSymbolicLink(hdfsLinkDirPath, sandboxHdfsBinaryPath);
-      log.info("The linked HDFS binary path is: " + sandboxHdfsBinaryPath);
-      log.info("The symbolic link path is: " + hdfsLinkDirPath);
+      Path hbaseLinkDirPath = Paths.get(hbaseBinaryPath);
+      Files.createSymbolicLink(hbaseLinkDirPath, sandboxHBaseBinaryPath);
+      log.info("The linked HBase binary path is: " + sandboxHBaseBinaryPath);
+      log.info("The symbolic link path is: " + hbaseLinkDirPath);
       // Adding binary to the PATH environment variable
-      addBinaryToPath(hdfsBinaryPath);
+      addBinaryToPath(hbaseBinaryPath);
     } catch (IOException | InterruptedException e) {
-      String msg = "Error creating the symbolic link to hdfs binary";
+      String msg = "Error creating the symbolic link to hbase binary";
       shutdownExecutor(1, msg, e);
     }
   }
 
   /**
-   * Add hdfs binary to the PATH environment variable by linking it to /usr/bin/hadoop. This
+   * Add hbase binary to the PATH environment variable by linking it to /usr/bin/hadoop. This
    * requires that /usr/bin/ is on the Mesos slave PATH, which is defined as part of the standard
    * Mesos slave packaging.
    */
-  private void addBinaryToPath(String hdfsBinaryPath) throws IOException, InterruptedException {
-    if (hdfsFrameworkConfig.usingNativeHadoopBinaries()) {
+  private void addBinaryToPath(String hbaseBinaryPath) throws IOException, InterruptedException {
+    if (hbaseFrameworkConfig.usingNativeHadoopBinaries()) {
       return;
     }
     String pathEnvVarLocation = "/usr/bin/hadoop";
-    String scriptContent = "#!/bin/bash \n" + hdfsBinaryPath + "/bin/hadoop \"$@\"";
+    String scriptContent = "#!/bin/bash \n" + hbaseBinaryPath + "/bin/hadoop \"$@\"";
 
     File file = new File(pathEnvVarLocation);
     Writer fileWriter = new OutputStreamWriter(new FileOutputStream(file), "UTF-8");
@@ -161,7 +161,7 @@ public abstract class AbstractNodeExecutor implements Executor {
     Process process = processBuilder.start();
     int exitCode = process.waitFor();
     if (exitCode != 0) {
-      String msg = "Error creating the symbolic link to hdfs binary."
+      String msg = "Error creating the symbolic link to hbase binary."
           + "Failure running 'chmod a+x " + pathEnvVarLocation + "'";
       shutdownExecutor(1, msg);
     }
@@ -184,10 +184,10 @@ public abstract class AbstractNodeExecutor implements Executor {
   protected void startProcess(ExecutorDriver driver, Task task) {
     reloadConfig();
 
-    File sandboxHdfsBinary = new File(System.getProperty("user.dir"));
-    Path sandboxHdfsBinaryPath = Paths.get(sandboxHdfsBinary.getAbsolutePath());
+    File sandboxHbaseBinary = new File(System.getProperty("user.dir"));
+    Path sandboxHbaseBinaryPath = Paths.get(sandboxHbaseBinary.getAbsolutePath());
 
-    log.info("The startProcess path is: " + sandboxHdfsBinaryPath);
+    log.info("The startProcess path is: " + sandboxHbaseBinaryPath);
 
     if (task.getProcess() == null) {
       try {
@@ -214,14 +214,14 @@ public abstract class AbstractNodeExecutor implements Executor {
    * Reloads the cluster configuration so the executor has the correct configuration info.
    */
   protected void reloadConfig() {
-    reloadConfig("hdfs-site.xml");
-    reloadConfig("hbase-site.xml");
-    reloadConfig("regionservers");
+    reloadConfig(HBaseConstants.HDFS_CONFIG_FILE_NAME);
+    reloadConfig(HBaseConstants.HBASE_CONFIG_FILE_NAME);
+    reloadConfig(HBaseConstants.REGION_SERVERS_FILENAME);
   }
 
   protected void reloadConfig(String filename) 
   {
-    if (hdfsFrameworkConfig.usingNativeHadoopBinaries()) {
+    if (hbaseFrameworkConfig.usingNativeHadoopBinaries()) {
       return;
     }
     // Find config URI

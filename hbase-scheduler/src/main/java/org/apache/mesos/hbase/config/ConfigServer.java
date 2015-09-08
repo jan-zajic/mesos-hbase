@@ -36,21 +36,21 @@ public class ConfigServer {
 
   private Server server;
   private Engine engine;
-  private HBaseFrameworkConfig hdfsFrameworkConfig;
+  private HBaseFrameworkConfig hbaseFrameworkConfig;
   private IPersistentStateStore persistenceStore;
 
   @Inject
-  public ConfigServer(HBaseFrameworkConfig hdfsFrameworkConfig,
+  public ConfigServer(HBaseFrameworkConfig hbaseFrameworkConfig,
       IPersistentStateStore persistenceStore) {
-    this.hdfsFrameworkConfig = hdfsFrameworkConfig;
+    this.hbaseFrameworkConfig = hbaseFrameworkConfig;
     this.persistenceStore = persistenceStore;
     engine = new Engine();
-    server = new Server(hdfsFrameworkConfig.getConfigServerPort());
+    server = new Server(hbaseFrameworkConfig.getConfigServerPort());
     ResourceHandler resourceHandler = new ResourceHandler();
-    resourceHandler.setResourceBase(hdfsFrameworkConfig.getExecutorPath());
+    resourceHandler.setResourceBase(hbaseFrameworkConfig.getExecutorPath());
     HandlerList handlers = new HandlerList();
     handlers.setHandlers(new Handler[]{
-        resourceHandler, new ServeHdfsConfigHandler()});
+        resourceHandler, new ServeHbaseConfigHandler()});
     server.setHandler(handlers);
 
     try {
@@ -73,7 +73,7 @@ public class ConfigServer {
     }
   }
 
-  private class ServeHdfsConfigHandler extends AbstractHandler {
+  private class ServeHbaseConfigHandler extends AbstractHandler {
 
     public synchronized void handle(String target, Request baseRequest, HttpServletRequest request,
         HttpServletResponse response) throws IOException {
@@ -92,17 +92,17 @@ public class ConfigServer {
 
     private String getHbaseRootDir()
     {
-      if (hdfsFrameworkConfig.usingMesosHdfs())
+      if (hbaseFrameworkConfig.usingMesosHdfs())
       {
-        return "hdfs://" + hdfsFrameworkConfig.getDfsNameServices() + "/hbase";
+        return "hdfs://" + hbaseFrameworkConfig.getDfsNameServices() + "/hbase";
       } else {
-        return hdfsFrameworkConfig.getHbaseRootDir();
+        return hbaseFrameworkConfig.getHbaseRootDir();
       }
     }
 
     private void handleHbaseSite(Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException     
     {
-      File confFile = new File(hdfsFrameworkConfig.getConfigPath());
+      File confFile = new File(hbaseFrameworkConfig.getConfigPath());
 
       if (!confFile.exists()) {
         throw new FileNotFoundException("Couldn't file config file: " + confFile.getPath()
@@ -127,9 +127,9 @@ public class ConfigServer {
       
       model.put("hbaseRootDir", getHbaseRootDir());      
       
-      model.put("frameworkName", hdfsFrameworkConfig.getFrameworkName());
-      model.put("dataDir", hdfsFrameworkConfig.getDataDir());
-      model.put("haZookeeperQuorum", hdfsFrameworkConfig.getHaZookeeperQuorum());
+      model.put("frameworkName", hbaseFrameworkConfig.getFrameworkName());
+      model.put("dataDir", hbaseFrameworkConfig.getDataDir());
+      model.put("haZookeeperQuorum", hbaseFrameworkConfig.getHaZookeeperQuorum());
 
       String content = engine.transform(view, model);
 

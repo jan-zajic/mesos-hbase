@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Entry point for persistence for the HDFS scheduler.
+ * Entry point for persistence for the HBase scheduler.
  */
 public interface IPersistentStateStore {
 

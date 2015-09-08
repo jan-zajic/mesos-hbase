@@ -23,7 +23,7 @@ import static org.apache.mesos.hbase.util.NodeTypes.*;
 
 /**
  * Persistence is handled by the Persistent State classes. This class does the
- * following:. 1) transforms raw types to hdfs types and protobuf types 2)
+ * following:. 1) transforms raw types to hbase types and protobuf types 2)
  * handles exception logic and rethrows PersistenceException
  */
 @Singleton
@@ -32,7 +32,7 @@ public class PersistentStateStore implements IPersistentStateStore
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
-  private IHBaseStore hdfsStore;
+  private IHBaseStore hbaseStore;
 
   private DeadNodeTracker deadNodeTracker;
 
@@ -42,13 +42,13 @@ public class PersistentStateStore implements IPersistentStateStore
   // TODO (elingg) we need to also track ZKFC's state
   // TODO (nicgrayson) add tests with in-memory state implementation for zookeeper
   @Inject
-  public PersistentStateStore(HBaseFrameworkConfig hdfsFrameworkConfig, IHBaseStore hdfsStore,
+  public PersistentStateStore(HBaseFrameworkConfig hbaseFrameworkConfig, IHBaseStore hbaseStore,
       DeadNodeTracker deadNodeTracker)
   {
     if (!HBaseConstants.isDevelopmentMode()) {
-      MesosNativeLibrary.load(hdfsFrameworkConfig.getNativeLibrary());
+      MesosNativeLibrary.load(hbaseFrameworkConfig.getNativeLibrary());
     }
-    this.hdfsStore = hdfsStore;
+    this.hbaseStore = hbaseStore;
     this.deadNodeTracker = deadNodeTracker;
 
     int deadNameNodes = getDeadNameNodes().size();
@@ -64,9 +64,9 @@ public class PersistentStateStore implements IPersistentStateStore
 
         try {
             if (id == null) {
-                hdfsStore.setRawValueForId(FRAMEWORK_ID_KEY, new byte[]{});
+                hbaseStore.setRawValueForId(FRAMEWORK_ID_KEY, new byte[]{});
             } else {
-                hdfsStore.setRawValueForId(FRAMEWORK_ID_KEY, id.toByteArray());
+                hbaseStore.setRawValueForId(FRAMEWORK_ID_KEY, id.toByteArray());
             }
         } catch (ExecutionException | InterruptedException e) {
             logger.error("Unable to set frameworkId", e);
@@ -80,7 +80,7 @@ public class PersistentStateStore implements IPersistentStateStore
         Protos.FrameworkID frameworkID = null;
         byte[] existingFrameworkId;
         try {
-            existingFrameworkId = hdfsStore.getRawValueForId(FRAMEWORK_ID_KEY);
+            existingFrameworkId = hbaseStore.getRawValueForId(FRAMEWORK_ID_KEY);
             if (existingFrameworkId.length > 0) {
                 frameworkID = Protos.FrameworkID.parseFrom(existingFrameworkId);
             }
@@ -256,7 +256,7 @@ public class PersistentStateStore implements IPersistentStateStore
   private Map<String, String> getNodesMap(String key)
     {
         try {
-            HashMap<String, String> nodesMap = hdfsStore.get(key);
+            HashMap<String, String> nodesMap = hbaseStore.get(key);
             if (nodesMap == null) {
                 return new HashMap<>();
             }
@@ -311,7 +311,7 @@ public class PersistentStateStore implements IPersistentStateStore
   private void setNameNodes(Map<String, String> nameNodes)
   {
     try {
-      hdfsStore.set(MASTERNODES_KEY, nameNodes);
+      hbaseStore.set(MASTERNODES_KEY, nameNodes);
     } catch (Exception e) {
       logger.error("Error while setting name nodes in persistent state", e);
     }
@@ -320,7 +320,7 @@ public class PersistentStateStore implements IPersistentStateStore
   private void setNameNodeTaskNames(Map<String, String> nameNodeTaskNames)
   {
     try {
-      hdfsStore.set(NAMENODE_TASKNAMES_KEY, nameNodeTaskNames);
+      hbaseStore.set(NAMENODE_TASKNAMES_KEY, nameNodeTaskNames);
     } catch (Exception e) {
       logger.error("Error while setting name node task names in persistent state", e);
     }
@@ -329,7 +329,7 @@ public class PersistentStateStore implements IPersistentStateStore
   private void setDataNodes(Map<String, String> dataNodes)
   {
     try {
-      hdfsStore.set(SLAVENODES_KEY, dataNodes);
+      hbaseStore.set(SLAVENODES_KEY, dataNodes);
     } catch (Exception e) {
       logger.error("Error while setting data nodes in persistent state", e);
     }
@@ -375,7 +375,7 @@ public class PersistentStateStore implements IPersistentStateStore
   private void setStargateNodes(Map<String, String> dataNodes)
   {
     try {
-      hdfsStore.set(STARGATENODES_KEY, dataNodes);
+      hbaseStore.set(STARGATENODES_KEY, dataNodes);
     } catch (Exception e) {
       logger.error("Error while setting stargate nodes in persistent state", e);
     }

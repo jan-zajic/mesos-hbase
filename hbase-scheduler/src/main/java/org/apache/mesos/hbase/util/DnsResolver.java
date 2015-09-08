@@ -22,21 +22,21 @@ public class DnsResolver {
   static final int NN_TIMER_PERIOD = 10000;
 
   private final HBaseScheduler scheduler;
-  private final HBaseFrameworkConfig hdfsFrameworkConfig;
+  private final HBaseFrameworkConfig hbaseFrameworkConfig;
 
   public DnsResolver(HBaseScheduler scheduler, HBaseFrameworkConfig hdfsFrameworkConfig) {
     this.scheduler = scheduler;
-    this.hdfsFrameworkConfig = hdfsFrameworkConfig;
+    this.hbaseFrameworkConfig = hdfsFrameworkConfig;
   }
 
   public boolean masterNodesResolvable() {
-    if (!hdfsFrameworkConfig.usingMesosDns()) {
+    if (!hbaseFrameworkConfig.usingMesosDns()) {
       return true;
     } //short circuit since Mesos handles this otherwise
     Set<String> hosts = new HashSet<>();
     for (int i = 1; i <= HBaseConstants.TOTAL_MASTER_NODES; i++) {
-      hosts.add(HBaseConstants.MASTER_NODE_ID + i + "." + hdfsFrameworkConfig.getFrameworkName() +
-        "." + hdfsFrameworkConfig.getMesosDnsDomain());
+      hosts.add(HBaseConstants.MASTER_NODE_ID + i + "." + hbaseFrameworkConfig.getFrameworkName() +
+        "." + hbaseFrameworkConfig.getMesosDnsDomain());
     }
     boolean success = true;
     for (String host : hosts) {
@@ -55,7 +55,7 @@ public class DnsResolver {
 
   public void sendMessageAfterNNResolvable(final SchedulerDriver driver,
       final Protos.TaskID taskId, final Protos.SlaveID slaveID, final String message) {
-    if (!hdfsFrameworkConfig.usingMesosDns()) {
+    if (!hbaseFrameworkConfig.usingMesosDns()) {
       // short circuit since Mesos handles this otherwise
       scheduler.sendMessageTo(driver, taskId, slaveID, message);
       return;

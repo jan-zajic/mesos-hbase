@@ -25,12 +25,12 @@ public class HBaseZkStore implements IHBaseStore {
   private State state;
 
   @Inject
-  public HBaseZkStore(HBaseFrameworkConfig hdfsFrameworkConfig) {
+  public HBaseZkStore(HBaseFrameworkConfig hbaseFrameworkConfig) {
 
-    this.state = new ZooKeeperState(hdfsFrameworkConfig.getStateZkServers(),
-        hdfsFrameworkConfig.getStateZkTimeout(),
+    this.state = new ZooKeeperState(hbaseFrameworkConfig.getStateZkServers(),
+        hbaseFrameworkConfig.getStateZkTimeout(),
         TimeUnit.MILLISECONDS,
-        "/hbase-mesos/" + hdfsFrameworkConfig.getFrameworkName());
+        "/hbase-mesos/" + hbaseFrameworkConfig.getFrameworkName());
   }
 
   public byte[] getRawValueForId(String id) throws ExecutionException, InterruptedException {

@@ -214,12 +214,10 @@ public class HBaseFrameworkConfig {
     return getConf().getLong("mesos.failover.timeout.sec", DEFAULT_FAILOVER_TIMEOUT);
   }
 
-  // TODO(elingg) Most likely this user name will change to HDFS
   public String getHbaseUser() {
     return getConf().get("mesos.hbase.user", "root");
   }
 
-  // TODO(elingg) This role needs to be updated.
   public String getHbaseRole() {
     return getConf().get("mesos.hbase.role", "*");
   }

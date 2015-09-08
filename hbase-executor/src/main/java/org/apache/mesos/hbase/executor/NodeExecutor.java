@@ -25,8 +25,8 @@ public class NodeExecutor extends AbstractNodeExecutor {
    * The constructor for the node which saves the configuration.
    */
   @Inject
-  NodeExecutor(HBaseFrameworkConfig hdfsFrameworkConfig) {
-    super(hdfsFrameworkConfig);
+  NodeExecutor(HBaseFrameworkConfig hbaseFrameworkConfig) {
+    super(hbaseFrameworkConfig);
   }
 
   /**

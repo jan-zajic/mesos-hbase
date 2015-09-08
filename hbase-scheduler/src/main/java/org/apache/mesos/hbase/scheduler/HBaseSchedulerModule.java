@@ -10,7 +10,7 @@ import org.apache.mesos.hbase.state.PersistentStateStore;
 import org.apache.mesos.hbase.util.HBaseConstants;
 
 /**
- * Guice Module for initializing interfaces to implementations for the HDFS Scheduler.
+ * Guice Module for initializing interfaces to implementations for the HBase Scheduler.
  */
 public class HBaseSchedulerModule extends AbstractModule
 {
