@@ -72,32 +72,32 @@ public class ConfigServer {
       throw new ConfigServerException(msg, e);
     }
   }
-  
+
   private class ServeHdfsConfigHandler extends AbstractHandler {
 
     public synchronized void handle(String target, Request baseRequest, HttpServletRequest request,
-      HttpServletResponse response) throws IOException {
-        
+        HttpServletResponse response) throws IOException {
+
       String pathRequested = request.getPathInfo().replace("/", "");
-      if(pathRequested.equalsIgnoreCase(HBaseConstants.HBASE_CONFIG_FILE_NAME))
+      if (pathRequested.equalsIgnoreCase(HBaseConstants.HBASE_CONFIG_FILE_NAME))
       {
-          handleHbaseSite(baseRequest, request, response);
-      } else if(pathRequested.equalsIgnoreCase(HBaseConstants.REGION_SERVERS_FILENAME)) {
-          handleRegionServers(baseRequest, request, response);
+        handleHbaseSite(baseRequest, request, response);
+      } else if (pathRequested.equalsIgnoreCase(HBaseConstants.REGION_SERVERS_FILENAME)) {
+        handleRegionServers(baseRequest, request, response);
       } else {
-          response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-          baseRequest.setHandled(true);         
+        response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+        baseRequest.setHandled(true);
       }
     }
-    
+
     private String getHbaseRootDir()
     {
-        if(hdfsFrameworkConfig.usingMesosHdfs())
-        {
-            return "hdfs://"+hdfsFrameworkConfig.getDfsNameServices()+"/hbase";
-        } else {
-            return hdfsFrameworkConfig.getHbaseRootDir();
-        }
+      if (hdfsFrameworkConfig.usingMesosHdfs())
+      {
+        return "hdfs://" + hdfsFrameworkConfig.getDfsNameServices() + "/hbase";
+      } else {
+        return hdfsFrameworkConfig.getHbaseRootDir();
+      }
     }
 
     private void handleHbaseSite(Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException     
@@ -175,6 +175,5 @@ public class ConfigServer {
         baseRequest.setHandled(true);
         response.getWriter().println(content);
     }
-    
   }
 }

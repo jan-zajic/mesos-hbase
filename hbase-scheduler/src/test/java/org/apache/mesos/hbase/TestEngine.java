@@ -1,4 +1,3 @@
-
 package org.apache.mesos.hbase;
 
 import com.floreysoft.jmte.Engine;
@@ -12,7 +11,7 @@ import org.junit.Test;
  */
 public class TestEngine {
 
-    @Test
+  @Test
     public void testReplacement()
     {
     String template = "<?xml version=\"1.0\"?>\n" +
@@ -43,5 +42,4 @@ public class TestEngine {
         System.out.println(content);
         assert content.contains("testdir");
     }
-    
 }

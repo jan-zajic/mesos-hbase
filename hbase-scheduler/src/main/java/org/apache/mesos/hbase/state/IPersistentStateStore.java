@@ -28,7 +28,7 @@ public interface IPersistentStateStore {
   List<String> getDeadDataNodes();
 
   Map<String, String> getPrimaryNodes();
-  
+
   Map<String, String> getRegionNodes();
 
   boolean dataNodeRunningOnSlave(String hostname);

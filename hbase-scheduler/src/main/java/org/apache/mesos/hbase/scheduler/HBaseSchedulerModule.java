@@ -14,17 +14,17 @@ import org.apache.mesos.hbase.util.HBaseConstants;
  */
 public class HBaseSchedulerModule extends AbstractModule
 {
-  
-    @Override
-    protected void configure()
-    {
-         bind(DeadNodeTracker.class);
-         if(HBaseConstants.isDevelopmentMode())
-             bind(IHBaseStore.class).to(HBaseDevelopmentStore.class);              
-         else
-             bind(IHBaseStore.class).to(HBaseZkStore.class);
 
-         bind(IPersistentStateStore.class).to(PersistentStateStore.class);  
-    }
-  
+  @Override
+  protected void configure()
+  {
+    bind(DeadNodeTracker.class);
+    if (HBaseConstants.isDevelopmentMode())
+      bind(IHBaseStore.class).to(HBaseDevelopmentStore.class);
+    else
+      bind(IHBaseStore.class).to(HBaseZkStore.class);
+
+    bind(IPersistentStateStore.class).to(PersistentStateStore.class);
+  }
+
 }
