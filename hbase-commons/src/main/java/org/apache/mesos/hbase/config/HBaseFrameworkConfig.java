@@ -197,6 +197,7 @@ public class HBaseFrameworkConfig {
         break;
       case "stargatenode":
         cpus = getStargateNodeCpus();
+        break;
       default:
         final String msg = "Invalid request for CPUs for taskName= " + taskName;
         log.error(msg);
