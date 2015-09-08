@@ -17,20 +17,20 @@ import static org.apache.mesos.hbase.util.NodeTypes.*;
 public class DeadNodeTracker
 {
 
-    private Map<String, Timestamp> timestampMap;
-    private String[] nodes = {
-        MASTERNODES_KEY, SLAVENODES_KEY};
+  private Map<String, Timestamp> timestampMap;
+  private String[] nodes = {
+      MASTERNODES_KEY, SLAVENODES_KEY};
 
-    private HBaseFrameworkConfig hdfsFrameworkConfig;
+  private HBaseFrameworkConfig hdfsFrameworkConfig;
 
-    @Inject
-    public DeadNodeTracker(HBaseFrameworkConfig hdfsFrameworkConfig)
-    {
-        this.hdfsFrameworkConfig = hdfsFrameworkConfig;
-        initializeTimestampMap();
-    }
+  @Inject
+  public DeadNodeTracker(HBaseFrameworkConfig hdfsFrameworkConfig)
+  {
+    this.hdfsFrameworkConfig = hdfsFrameworkConfig;
+    initializeTimestampMap();
+  }
 
-    private void initializeTimestampMap()
+  private void initializeTimestampMap()
     {
         timestampMap = new HashMap<>();
         for (String node : nodes) {
@@ -38,60 +38,60 @@ public class DeadNodeTracker
         }
     }
 
-    private void resetNodeTimeStamp(String nodeType)
-    {
-        Date date = DateUtils.addSeconds(new Date(), hdfsFrameworkConfig.getDeadNodeTimeout());
-        timestampMap.put(nodeType, new Timestamp(date.getTime()));
+  private void resetNodeTimeStamp(String nodeType)
+  {
+    Date date = DateUtils.addSeconds(new Date(), hdfsFrameworkConfig.getDeadNodeTimeout());
+    timestampMap.put(nodeType, new Timestamp(date.getTime()));
+  }
+
+  public void resetDeadNodeTimeStamps(int deadNameNodes, int deadDataNodes, int deadStargateNodes)
+  {
+    if (deadNameNodes > 0) {
+      resetNameNodeTimeStamp();
     }
 
-    public void resetDeadNodeTimeStamps(int deadNameNodes, int deadDataNodes, int deadStargateNodes)
-    {
-        if (deadNameNodes > 0) {
-            resetNameNodeTimeStamp();
-        }
-
-        if (deadDataNodes > 0) {
-            resetDataNodeTimeStamp();
-        }
-
-        if (deadStargateNodes > 0) {
-            resetStargateNodeTimeStamp();
-        }
+    if (deadDataNodes > 0) {
+      resetDataNodeTimeStamp();
     }
 
-    public void resetNameNodeTimeStamp()
-    {
-        resetNodeTimeStamp(MASTERNODES_KEY);
+    if (deadStargateNodes > 0) {
+      resetStargateNodeTimeStamp();
     }
+  }
 
-    public void resetDataNodeTimeStamp()
-    {
-        resetNodeTimeStamp(SLAVENODES_KEY);
-    }
+  public void resetNameNodeTimeStamp()
+  {
+    resetNodeTimeStamp(MASTERNODES_KEY);
+  }
 
-    public boolean masterNodeTimerExpired()
-    {
-        return nodeTimerExpired(MASTERNODES_KEY);
-    }
+  public void resetDataNodeTimeStamp()
+  {
+    resetNodeTimeStamp(SLAVENODES_KEY);
+  }
 
-    public boolean slaveNodeTimerExpired()
-    {
-        return nodeTimerExpired(SLAVENODES_KEY);
-    }
+  public boolean masterNodeTimerExpired()
+  {
+    return nodeTimerExpired(MASTERNODES_KEY);
+  }
 
-    private boolean nodeTimerExpired(String nodeType)
-    {
-        Timestamp timestamp = timestampMap.get(nodeType);
-        return timestamp != null && timestamp.before(new Date());
-    }
+  public boolean slaveNodeTimerExpired()
+  {
+    return nodeTimerExpired(SLAVENODES_KEY);
+  }
 
-    boolean stargateNodeTimerExpired()
-    {
-        return nodeTimerExpired(STARGATENODES_KEY);
-    }
+  private boolean nodeTimerExpired(String nodeType)
+  {
+    Timestamp timestamp = timestampMap.get(nodeType);
+    return timestamp != null && timestamp.before(new Date());
+  }
 
-    void resetStargateNodeTimeStamp()
-    {
-        resetNodeTimeStamp(STARGATENODES_KEY);
-    }
+  boolean stargateNodeTimerExpired()
+  {
+    return nodeTimerExpired(STARGATENODES_KEY);
+  }
+
+  void resetStargateNodeTimeStamp()
+  {
+    resetNodeTimeStamp(STARGATENODES_KEY);
+  }
 }

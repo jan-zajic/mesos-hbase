@@ -61,7 +61,7 @@ public class HBaseScheduler implements org.apache.mesos.Scheduler, Runnable {
   private final LiveState liveState;
   private final IPersistentStateStore persistenceStore;
   private final DnsResolver dnsResolver;
-  
+
   private MasterInfo masterInfo;
   private ObjectMapper mapper = new ObjectMapper();
 
@@ -292,49 +292,50 @@ public class HBaseScheduler implements org.apache.mesos.Scheduler, Runnable {
 
     return null;
   }
-  
+
   private boolean launchNode(SchedulerDriver driver, Offer offer,
-    String nodeName, String taskType, String executorName) {
+      String nodeName, String taskType, String executorName) {
     // nodeName is the type of executor to launch
     // executorName is to distinguish different types of nodes
     // taskType is the type of task in mesos to launch on the node
     // taskName is a name chosen to identify the task in mesos and mesos-dns (if used)
     log.info(String.format("Launching node of type %s with task %s", nodeName, taskType));
     String taskIdName = String.format("%s.%s.%d", nodeName, executorName,
-      System.currentTimeMillis());
+        System.currentTimeMillis());
     List<Resource> resources = getExecutorResources();
     ExecutorInfo executorInfo = createExecutor(taskIdName, nodeName, executorName, resources);
-    
+
     List<Resource> taskResources = getTaskResources(taskType);
     String taskName = getNextTaskName(taskType);
     TaskID taskId = TaskID.newBuilder()
-      .setValue(String.format("task.%s.%s", taskType, taskIdName))
-      .build();
+        .setValue(String.format("task.%s.%s", taskType, taskIdName))
+        .build();
     TaskInfo task = TaskInfo.newBuilder()
-      .setExecutor(executorInfo)
-      .setName(taskName)
-      .setTaskId(taskId)
-      .setSlaveId(offer.getSlaveId())
-      .addAllResources(taskResources) 
-      .setData(ByteString.copyFromUtf8(
-        getCommand(taskType)))        
-      .build();
-    
+        .setExecutor(executorInfo)
+        .setName(taskName)
+        .setTaskId(taskId)
+        .setSlaveId(offer.getSlaveId())
+        .addAllResources(taskResources)
+        .setData(ByteString.copyFromUtf8(
+            getCommand(taskType)))
+        .build();
+
     liveState.addStagingTask(task.getTaskId());
     persistenceStore.addHBaseNode(taskId, offer.getHostname(), taskType, taskName);
-    
+
     driver.launchTasks(Arrays.asList(offer.getId()), Arrays.asList(task));
     return true;
   }
 
   private String getCommand(String taskType)
   {
-    if(HBaseConstants.STARGATE_NODE_ID.equals(taskType))
-        return String.format("bin/hbase-mesos-%s %d", taskType, hbaseFrameworkConfig.getStargateServerPort());
+    if (HBaseConstants.STARGATE_NODE_ID.equals(taskType))
+      return String.format("bin/hbase-mesos-%s %d", taskType,
+          hbaseFrameworkConfig.getStargateServerPort());
     else
-        return String.format("bin/hbase-mesos-%s", taskType);
+      return String.format("bin/hbase-mesos-%s", taskType);
   }
-  
+
   private String getNextTaskName(String taskType) {
 
     if (taskType.equals(HBaseConstants.MASTER_NODE_ID)) {
@@ -538,8 +539,8 @@ public class HBaseScheduler implements org.apache.mesos.Scheduler, Runnable {
     // entirely?
     if (deadDataNodes.isEmpty()) {
       if (persistenceStore.dataNodeRunningOnSlave(offer.getHostname())
-          || persistenceStore.nameNodeRunningOnSlave(offer.getHostname())) 
-      {          
+          || persistenceStore.nameNodeRunningOnSlave(offer.getHostname()))
+      {
         log.info(String.format("Already running hbase task on %s", offer.getHostname()));
         return tryToLaunchStargateNode(driver, offer);
       } else {
@@ -557,19 +558,20 @@ public class HBaseScheduler implements org.apache.mesos.Scheduler, Runnable {
     }
     return false;
   }
-  
+
   private boolean tryToLaunchStargateNode(SchedulerDriver driver, Offer offer)
   {
     if (!acceptOffer(offer, "stargate", hbaseFrameworkConfig.getStargateNodeCpus(),
         hbaseFrameworkConfig.getStargateNodeHeapSize()))
       return false;
-    
+
     boolean launch = false;
     List<String> deadNameNodes = persistenceStore.getDeadStargateNodes();
-    
+
     if (deadNameNodes.isEmpty()) {
       if (persistenceStore.getStargateNodes().size() >= hbaseFrameworkConfig.getStargateNodeCount()) {
-        log.info(String.format("Already running %s stargate nodes", hbaseFrameworkConfig.getStargateNodeCount()));
+        log.info(String.format("Already running %s stargate nodes",
+            hbaseFrameworkConfig.getStargateNodeCount()));
       } else {
         launch = true;
       }

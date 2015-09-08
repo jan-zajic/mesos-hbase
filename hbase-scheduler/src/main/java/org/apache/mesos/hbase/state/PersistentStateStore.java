@@ -30,35 +30,35 @@ import static org.apache.mesos.hbase.util.NodeTypes.*;
 public class PersistentStateStore implements IPersistentStateStore
 {
 
-    private final Logger logger = LoggerFactory.getLogger(getClass());
+  private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    private IHBaseStore hdfsStore;
+  private IHBaseStore hdfsStore;
 
-    private DeadNodeTracker deadNodeTracker;
+  private DeadNodeTracker deadNodeTracker;
 
-    private static final String FRAMEWORK_ID_KEY = "frameworkId";
-    private static final String NAMENODE_TASKNAMES_KEY = "nameNodeTaskNames";
+  private static final String FRAMEWORK_ID_KEY = "frameworkId";
+  private static final String NAMENODE_TASKNAMES_KEY = "nameNodeTaskNames";
 
-    // TODO (elingg) we need to also track ZKFC's state
-    // TODO (nicgrayson) add tests with in-memory state implementation for zookeeper
-    @Inject
-    public PersistentStateStore(HBaseFrameworkConfig hdfsFrameworkConfig, IHBaseStore hdfsStore,
-            DeadNodeTracker deadNodeTracker)
-    {
-        if (!HBaseConstants.isDevelopmentMode()) {
-            MesosNativeLibrary.load(hdfsFrameworkConfig.getNativeLibrary());
-        }
-        this.hdfsStore = hdfsStore;
-        this.deadNodeTracker = deadNodeTracker;
-
-        int deadNameNodes = getDeadNameNodes().size();
-        int deadDataNodes = getDeadDataNodes().size();
-        int deadStargateNodes = getDeadStargateNodes().size();
-
-        deadNodeTracker.resetDeadNodeTimeStamps(deadNameNodes, deadDataNodes, deadStargateNodes);
+  // TODO (elingg) we need to also track ZKFC's state
+  // TODO (nicgrayson) add tests with in-memory state implementation for zookeeper
+  @Inject
+  public PersistentStateStore(HBaseFrameworkConfig hdfsFrameworkConfig, IHBaseStore hdfsStore,
+      DeadNodeTracker deadNodeTracker)
+  {
+    if (!HBaseConstants.isDevelopmentMode()) {
+      MesosNativeLibrary.load(hdfsFrameworkConfig.getNativeLibrary());
     }
+    this.hdfsStore = hdfsStore;
+    this.deadNodeTracker = deadNodeTracker;
 
-    @Override
+    int deadNameNodes = getDeadNameNodes().size();
+    int deadDataNodes = getDeadDataNodes().size();
+    int deadStargateNodes = getDeadStargateNodes().size();
+
+    deadNodeTracker.resetDeadNodeTimeStamps(deadNameNodes, deadDataNodes, deadStargateNodes);
+  }
+
+  @Override
     public void setFrameworkId(Protos.FrameworkID id)
     {
 
@@ -74,7 +74,7 @@ public class PersistentStateStore implements IPersistentStateStore
         }
     }
 
-    @Override
+  @Override
     public Protos.FrameworkID getFrameworkId()
     {
         Protos.FrameworkID frameworkID = null;
@@ -94,68 +94,68 @@ public class PersistentStateStore implements IPersistentStateStore
         return frameworkID;
     }
 
-    @Override
-    public void removeTaskId(String taskId)
-    {
+  @Override
+  public void removeTaskId(String taskId)
+  {
     // TODO (elingg) optimize this method/ Possibly index by task id instead of hostname/
-        // Possibly call removeTask(slaveId, taskId) to avoid iterating through all maps
+    // Possibly call removeTask(slaveId, taskId) to avoid iterating through all maps
 
-        if (removeTaskIdFromNameNodes(taskId)
-                || removeTaskIdFromDataNodes(taskId)) {
-            logger.debug("task id: " + taskId + " removed");
-        } else {
-            logger.warn("task id: " + taskId + " request to be removed doesn't exist");
-        }
+    if (removeTaskIdFromNameNodes(taskId)
+        || removeTaskIdFromDataNodes(taskId)) {
+      logger.debug("task id: " + taskId + " removed");
+    } else {
+      logger.warn("task id: " + taskId + " request to be removed doesn't exist");
     }
+  }
 
-    @Override
-    public void addHBaseNode(Protos.TaskID taskId, String hostname, String taskType, String taskName)
-    {
-        switch (taskType) {
-            case HBaseConstants.MASTER_NODE_ID:
-                addNameNode(taskId, hostname, taskName);
-                break;
-            case HBaseConstants.SLAVE_NODE_ID:
-                addDataNode(taskId, hostname);
-                break;
-            case HBaseConstants.STARGATE_NODE_ID:
-                addStargateNode(taskId, hostname);
-            default:
-                logger.error("Task name unknown");
-        }
+  @Override
+  public void addHBaseNode(Protos.TaskID taskId, String hostname, String taskType, String taskName)
+  {
+    switch (taskType) {
+      case HBaseConstants.MASTER_NODE_ID:
+        addNameNode(taskId, hostname, taskName);
+        break;
+      case HBaseConstants.SLAVE_NODE_ID:
+        addDataNode(taskId, hostname);
+        break;
+      case HBaseConstants.STARGATE_NODE_ID:
+        addStargateNode(taskId, hostname);
+      default:
+        logger.error("Task name unknown");
     }
+  }
 
-    private void addDataNode(Protos.TaskID taskId, String hostname)
-    {
-        Map<String, String> dataNodes = getRegionNodes();
-        dataNodes.put(hostname, taskId.getValue());
-        setDataNodes(dataNodes);
-    }
+  private void addDataNode(Protos.TaskID taskId, String hostname)
+  {
+    Map<String, String> dataNodes = getRegionNodes();
+    dataNodes.put(hostname, taskId.getValue());
+    setDataNodes(dataNodes);
+  }
 
-    private void addStargateNode(Protos.TaskID taskId, String hostname)
-    {
-        Map<String, String> dataNodes = getStargateNodes();
-        dataNodes.put(hostname, taskId.getValue());
-        setStargateNodes(dataNodes);
-    }
-    
-    private void addNameNode(Protos.TaskID taskId, String hostname, String taskName)
-    {
-        Map<String, String> nameNodes = getPrimaryNodes();
-        nameNodes.put(hostname, taskId.getValue());
-        setNameNodes(nameNodes);
-        Map<String, String> nameNodeTaskNames = getPrimaryNodeTaskNames();
-        nameNodeTaskNames.put(taskId.getValue(), taskName);
-        setNameNodeTaskNames(nameNodeTaskNames);
-    }
+  private void addStargateNode(Protos.TaskID taskId, String hostname)
+  {
+    Map<String, String> dataNodes = getStargateNodes();
+    dataNodes.put(hostname, taskId.getValue());
+    setStargateNodes(dataNodes);
+  }
 
-    @Override
-    public Map<String, String> getPrimaryNodeTaskNames()
-    {
-        return getNodesMap(NAMENODE_TASKNAMES_KEY);
-    }
+  private void addNameNode(Protos.TaskID taskId, String hostname, String taskName)
+  {
+    Map<String, String> nameNodes = getPrimaryNodes();
+    nameNodes.put(hostname, taskId.getValue());
+    setNameNodes(nameNodes);
+    Map<String, String> nameNodeTaskNames = getPrimaryNodeTaskNames();
+    nameNodeTaskNames.put(taskId.getValue(), taskName);
+    setNameNodeTaskNames(nameNodeTaskNames);
+  }
 
-    @Override
+  @Override
+  public Map<String, String> getPrimaryNodeTaskNames()
+  {
+    return getNodesMap(NAMENODE_TASKNAMES_KEY);
+  }
+
+  @Override
     public List<String> getDeadNameNodes()
     {
         List<String> deadNameHosts = new ArrayList<>();
@@ -174,19 +174,19 @@ public class PersistentStateStore implements IPersistentStateStore
         return deadNameHosts;
     }
 
-    private void removeDeadNameNodes()
-    {
-        deadNodeTracker.resetNameNodeTimeStamp();
-        Map<String, String> nameNodes = getPrimaryNodes();
-        List<String> deadNameHosts = getDeadNameNodes();
-        for (String deadNameHost : deadNameHosts) {
-            nameNodes.remove(deadNameHost);
-            logger.info("Removing NN Host: " + deadNameHost);
-        }
-        setNameNodes(nameNodes);
+  private void removeDeadNameNodes()
+  {
+    deadNodeTracker.resetNameNodeTimeStamp();
+    Map<String, String> nameNodes = getPrimaryNodes();
+    List<String> deadNameHosts = getDeadNameNodes();
+    for (String deadNameHost : deadNameHosts) {
+      nameNodes.remove(deadNameHost);
+      logger.info("Removing NN Host: " + deadNameHost);
     }
+    setNameNodes(nameNodes);
+  }
 
-    @Override
+  @Override
     public List<String> getDeadDataNodes()
     {
         List<String> deadDataHosts = new ArrayList<>();
@@ -205,55 +205,55 @@ public class PersistentStateStore implements IPersistentStateStore
         return deadDataHosts;
     }
 
-    private void removeDeadDataNodes()
-    {
-        deadNodeTracker.resetDataNodeTimeStamp();
-        Map<String, String> dataNodes = getRegionNodes();
-        List<String> deadDataHosts = getDeadDataNodes();
-        for (String deadDataHost : deadDataHosts) {
-            dataNodes.remove(deadDataHost);
-            logger.info("Removing DN Host: " + deadDataHost);
-        }
-        setDataNodes(dataNodes);
+  private void removeDeadDataNodes()
+  {
+    deadNodeTracker.resetDataNodeTimeStamp();
+    Map<String, String> dataNodes = getRegionNodes();
+    List<String> deadDataHosts = getDeadDataNodes();
+    for (String deadDataHost : deadDataHosts) {
+      dataNodes.remove(deadDataHost);
+      logger.info("Removing DN Host: " + deadDataHost);
     }
+    setDataNodes(dataNodes);
+  }
 
-    @Override
-    public Map<String, String> getPrimaryNodes()
-    {
-        return getNodesMap(MASTERNODES_KEY);
-    }
+  @Override
+  public Map<String, String> getPrimaryNodes()
+  {
+    return getNodesMap(MASTERNODES_KEY);
+  }
 
-    @Override
-    public Map<String, String> getRegionNodes()
-    {
-        return getNodesMap(SLAVENODES_KEY);
-    }
+  @Override
+  public Map<String, String> getRegionNodes()
+  {
+    return getNodesMap(SLAVENODES_KEY);
+  }
 
-    @Override
-    public boolean dataNodeRunningOnSlave(String hostname)
-    {
-        return getRegionNodes().containsKey(hostname);
-    }
+  @Override
+  public boolean dataNodeRunningOnSlave(String hostname)
+  {
+    return getRegionNodes().containsKey(hostname);
+  }
 
-    @Override
-    public boolean nameNodeRunningOnSlave(String hostname)
-    {
-        return getPrimaryNodes().containsKey(hostname);
-    }
+  @Override
+  public boolean nameNodeRunningOnSlave(String hostname)
+  {
+    return getPrimaryNodes().containsKey(hostname);
+  }
 
-    @Override
-    public Set<String> getAllTaskIds()
-    {
-        Set<String> allTaskIds = new HashSet<String>();
-        Collection<String> nameNodes = getPrimaryNodes().values();
-        Collection<String> dataNodes = getRegionNodes().values();
-        allTaskIds.addAll(nameNodes);
-        allTaskIds.addAll(dataNodes);
-        return allTaskIds;
+  @Override
+  public Set<String> getAllTaskIds()
+  {
+    Set<String> allTaskIds = new HashSet<String>();
+    Collection<String> nameNodes = getPrimaryNodes().values();
+    Collection<String> dataNodes = getRegionNodes().values();
+    allTaskIds.addAll(nameNodes);
+    allTaskIds.addAll(dataNodes);
+    return allTaskIds;
 
-    }
+  }
 
-    private Map<String, String> getNodesMap(String key)
+  private Map<String, String> getNodesMap(String key)
     {
         try {
             HashMap<String, String> nodesMap = hdfsStore.get(key);
@@ -267,81 +267,81 @@ public class PersistentStateStore implements IPersistentStateStore
         }
     }
 
-    private boolean removeTaskIdFromNameNodes(String taskId)
-    {
-        boolean nodesModified = false;
+  private boolean removeTaskIdFromNameNodes(String taskId)
+  {
+    boolean nodesModified = false;
 
-        Map<String, String> nameNodes = getPrimaryNodes();
-        if (nameNodes.values().contains(taskId)) {
-            for (Map.Entry<String, String> entry : nameNodes.entrySet()) {
-                if (entry.getValue() != null && entry.getValue().equals(taskId)) {
-                    nameNodes.put(entry.getKey(), null);
-                    setNameNodes(nameNodes);
-                    Map<String, String> nameNodeTaskNames = getPrimaryNodeTaskNames();
-                    nameNodeTaskNames.remove(taskId);
-                    setNameNodeTaskNames(nameNodeTaskNames);
+    Map<String, String> nameNodes = getPrimaryNodes();
+    if (nameNodes.values().contains(taskId)) {
+      for (Map.Entry<String, String> entry : nameNodes.entrySet()) {
+        if (entry.getValue() != null && entry.getValue().equals(taskId)) {
+          nameNodes.put(entry.getKey(), null);
+          setNameNodes(nameNodes);
+          Map<String, String> nameNodeTaskNames = getPrimaryNodeTaskNames();
+          nameNodeTaskNames.remove(taskId);
+          setNameNodeTaskNames(nameNodeTaskNames);
 
-                    deadNodeTracker.resetNameNodeTimeStamp();
-                    nodesModified = true;
-                }
-            }
+          deadNodeTracker.resetNameNodeTimeStamp();
+          nodesModified = true;
         }
-        return nodesModified;
+      }
     }
+    return nodesModified;
+  }
 
-    private boolean removeTaskIdFromDataNodes(String taskId)
-    {
-        boolean nodesModified = false;
+  private boolean removeTaskIdFromDataNodes(String taskId)
+  {
+    boolean nodesModified = false;
 
-        Map<String, String> dataNodes = getRegionNodes();
-        if (dataNodes.values().contains(taskId)) {
-            for (Map.Entry<String, String> entry : dataNodes.entrySet()) {
-                if (entry.getValue() != null && entry.getValue().equals(taskId)) {
-                    dataNodes.put(entry.getKey(), null);
-                    setDataNodes(dataNodes);
+    Map<String, String> dataNodes = getRegionNodes();
+    if (dataNodes.values().contains(taskId)) {
+      for (Map.Entry<String, String> entry : dataNodes.entrySet()) {
+        if (entry.getValue() != null && entry.getValue().equals(taskId)) {
+          dataNodes.put(entry.getKey(), null);
+          setDataNodes(dataNodes);
 
-                    deadNodeTracker.resetDataNodeTimeStamp();
-                    nodesModified = true;
-                }
-            }
+          deadNodeTracker.resetDataNodeTimeStamp();
+          nodesModified = true;
         }
-        return nodesModified;
+      }
     }
+    return nodesModified;
+  }
 
-    private void setNameNodes(Map<String, String> nameNodes)
-    {
-        try {
-            hdfsStore.set(MASTERNODES_KEY, nameNodes);
-        } catch (Exception e) {
-            logger.error("Error while setting name nodes in persistent state", e);
-        }
+  private void setNameNodes(Map<String, String> nameNodes)
+  {
+    try {
+      hdfsStore.set(MASTERNODES_KEY, nameNodes);
+    } catch (Exception e) {
+      logger.error("Error while setting name nodes in persistent state", e);
     }
+  }
 
-    private void setNameNodeTaskNames(Map<String, String> nameNodeTaskNames)
-    {
-        try {
-            hdfsStore.set(NAMENODE_TASKNAMES_KEY, nameNodeTaskNames);
-        } catch (Exception e) {
-            logger.error("Error while setting name node task names in persistent state", e);
-        }
+  private void setNameNodeTaskNames(Map<String, String> nameNodeTaskNames)
+  {
+    try {
+      hdfsStore.set(NAMENODE_TASKNAMES_KEY, nameNodeTaskNames);
+    } catch (Exception e) {
+      logger.error("Error while setting name node task names in persistent state", e);
     }
+  }
 
-    private void setDataNodes(Map<String, String> dataNodes)
-    {
-        try {
-            hdfsStore.set(SLAVENODES_KEY, dataNodes);
-        } catch (Exception e) {
-            logger.error("Error while setting data nodes in persistent state", e);
-        }
+  private void setDataNodes(Map<String, String> dataNodes)
+  {
+    try {
+      hdfsStore.set(SLAVENODES_KEY, dataNodes);
+    } catch (Exception e) {
+      logger.error("Error while setting data nodes in persistent state", e);
     }
+  }
 
-    @Override
-    public Map<String, String> getStargateNodes()
-    {
-        return getNodesMap(STARGATENODES_KEY);
-    }
+  @Override
+  public Map<String, String> getStargateNodes()
+  {
+    return getNodesMap(STARGATENODES_KEY);
+  }
 
-    @Override
+  @Override
     public List<String> getDeadStargateNodes()
     {
         List<String> deadDataHosts = new ArrayList<>();
@@ -360,25 +360,25 @@ public class PersistentStateStore implements IPersistentStateStore
         return deadDataHosts;
     }
 
-    private void removeDeadStargateNodes()
-    {
-        deadNodeTracker.resetStargateNodeTimeStamp();
-        Map<String, String> dataNodes = getStargateNodes();
-        List<String> deadDataHosts = getDeadStargateNodes();
-        for (String deadDataHost : deadDataHosts) {
-            dataNodes.remove(deadDataHost);
-            logger.info("Removing Rest Host: " + deadDataHost);
-        }
-        setStargateNodes(dataNodes);
+  private void removeDeadStargateNodes()
+  {
+    deadNodeTracker.resetStargateNodeTimeStamp();
+    Map<String, String> dataNodes = getStargateNodes();
+    List<String> deadDataHosts = getDeadStargateNodes();
+    for (String deadDataHost : deadDataHosts) {
+      dataNodes.remove(deadDataHost);
+      logger.info("Removing Rest Host: " + deadDataHost);
     }
+    setStargateNodes(dataNodes);
+  }
 
-    private void setStargateNodes(Map<String, String> dataNodes)
-    {
-        try {
-            hdfsStore.set(STARGATENODES_KEY, dataNodes);
-        } catch (Exception e) {
-            logger.error("Error while setting stargate nodes in persistent state", e);
-        }
+  private void setStargateNodes(Map<String, String> dataNodes)
+  {
+    try {
+      hdfsStore.set(STARGATENODES_KEY, dataNodes);
+    } catch (Exception e) {
+      logger.error("Error while setting stargate nodes in persistent state", e);
     }
+  }
 
 }

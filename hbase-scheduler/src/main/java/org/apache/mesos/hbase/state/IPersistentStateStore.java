@@ -26,13 +26,13 @@ public interface IPersistentStateStore {
   List<String> getDeadNameNodes();
 
   List<String> getDeadDataNodes();
-  
+
   List<String> getDeadStargateNodes();
 
   Map<String, String> getPrimaryNodes();
 
   Map<String, String> getRegionNodes();
-  
+
   Map<String, String> getStargateNodes();
 
   boolean dataNodeRunningOnSlave(String hostname);
