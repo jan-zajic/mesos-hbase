@@ -41,3 +41,6 @@ Starting HBase-Mesos scheduler using marathon
 4. `./bin/hbase-mesos-marathon MARATHON_ADDRESS`
 5. Check the Marathon web console, after that Mesos web console
 
+Using HBase
+--------------------------
+See REST API tutorial at https://wiki.apache.org/hadoop/Hbase/Stargate
