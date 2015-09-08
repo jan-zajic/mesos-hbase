@@ -18,7 +18,7 @@
     8765
   ],
   "uris": [
-    "ftp://jzajic-nb/deploy/hbase-mesos-0.1.0.tgz",
+    "ftp://{DEPLOYMENT_MACHINE}/deploy/hbase-mesos-0.1.0.tgz",
     "https://downloads.mesosphere.io/java/jre-7u76-linux-x64.tar.gz"
   ],
   "env": {
