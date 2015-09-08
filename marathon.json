@@ -4,7 +4,7 @@
       "timeoutSeconds": 5,
       "protocol": "HTTP",
       "portIndex": 0,
-      "path": "/hdfs-site.xml",
+      "path": "/hbase-site.xml",
       "maxConsecutiveFailures": 0,
       "intervalSeconds": 30,
       "gracePeriodSeconds": 120
