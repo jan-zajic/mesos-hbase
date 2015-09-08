@@ -6,7 +6,7 @@ package org.apache.mesos.hbase.util;
 public final class HBaseConstants {
 
   // Total number of master nodes
-  public static final Integer TOTAL_MASTER_NODES = 1;
+  public static final Integer TOTAL_MASTER_NODES = 2;
 
   public static final String DEVELOPMENT_MODE_PROPERTY = "mesos.hbase.devel";
 
