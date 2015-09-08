@@ -47,10 +47,6 @@ public class NodeExecutor extends AbstractNodeExecutor {
     executorInfo = taskInfo.getExecutor();
     task = new Task(taskInfo);
     startProcess(driver, task);
-    driver.sendStatusUpdate(TaskStatus.newBuilder()
-        .setTaskId(taskInfo.getTaskId())
-        .setState(TaskState.TASK_RUNNING)
-        .setData(taskInfo.getData()).build());
   }
 
   @Override

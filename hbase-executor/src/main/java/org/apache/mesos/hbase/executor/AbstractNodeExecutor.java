@@ -177,7 +177,7 @@ public abstract class AbstractNodeExecutor implements Executor {
     }
     System.exit(statusCode);
   }
-
+  
   /**
    * Starts a task's process so it goes into running state.
    */
@@ -194,9 +194,15 @@ public abstract class AbstractNodeExecutor implements Executor {
         ProcessBuilder processBuilder = new ProcessBuilder("sh", "-c", task.getCmd());
         task.setProcess(processBuilder.start());
         redirectProcess(task.getProcess());
+        //send task success
+        driver.sendStatusUpdate(TaskStatus.newBuilder()
+            .setTaskId(task.getTaskInfo().getTaskId())
+            .setState(TaskState.TASK_RUNNING)
+            .setData(task.getTaskInfo().getData()).build());
       } catch (IOException e) {
         log.error("Unable to start process:", e);
         task.getProcess().destroy();
+        //send task failed
         sendTaskFailed(driver, task);
       }
     } else {
