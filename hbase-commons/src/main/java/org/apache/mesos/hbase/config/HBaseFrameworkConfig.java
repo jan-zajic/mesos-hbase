@@ -27,7 +27,7 @@ public class HBaseFrameworkConfig {
 
   private static final double DEFAULT_CPUS = 0.5;
   private static final double DEFAULT_EXECUTOR_CPUS = DEFAULT_CPUS;
-  private static final double DEFAULT_NAMENODE_CPUS = 1;
+  private static final double DEFAULT_PRIMARYNODE_CPUS = 1;
   private static final double DEFAULT_STARGATE_CPUS = 0.2;
   private static final double DEFAULT_DATANODE_CPUS = 1;
 
@@ -175,7 +175,7 @@ public class HBaseFrameworkConfig {
   }
 
   public double getMasterNodeCpus() {
-    return getConf().getDouble("mesos.hbase.master.cpus", DEFAULT_NAMENODE_CPUS);
+    return getConf().getDouble("mesos.hbase.master.cpus", DEFAULT_PRIMARYNODE_CPUS);
   }
 
   public double getStargateNodeCpus() {

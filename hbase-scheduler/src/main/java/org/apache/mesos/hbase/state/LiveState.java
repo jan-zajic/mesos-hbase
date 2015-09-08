@@ -60,7 +60,7 @@ public class LiveState {
     this.currentAcquisitionPhase = phase;
   }
   
-  public int getNameNodeSize() {
+  public int getMasterNodeSize() {
     return countOfRunningTasksWith(HBaseConstants.MASTER_NODE_TASKID);
   }
 

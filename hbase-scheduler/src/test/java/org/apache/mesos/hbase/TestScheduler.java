@@ -88,7 +88,7 @@ public class TestScheduler {
     Protos.SlaveID slaveId = createSlaveId("1");
 
     when(liveState.getCurrentAcquisitionPhase()).thenReturn(AcquisitionPhase.START_MASTER_NODES);
-    when(liveState.getNameNodeSize()).thenReturn(2);
+    when(liveState.getMasterNodeSize()).thenReturn(2);
 
     scheduler.statusUpdate(driver,
         createTaskStatus(taskId, Protos.TaskState.TASK_RUNNING));
@@ -99,7 +99,7 @@ public class TestScheduler {
   @Test
   public void statusUpdateTransitionFromFormatNameNodesToDataNodes() {
     when(liveState.getCurrentAcquisitionPhase()).thenReturn(AcquisitionPhase.SLAVE_NODES);
-    when(liveState.getNameNodeSize()).thenReturn(HBaseConstants.TOTAL_MASTER_NODES);
+    when(liveState.getMasterNodeSize()).thenReturn(HBaseConstants.TOTAL_MASTER_NODES);
 
     scheduler.statusUpdate(
         driver,
