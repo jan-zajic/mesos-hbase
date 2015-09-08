@@ -139,6 +139,9 @@ public class HBaseFrameworkConfig {
       case "slavenode":
         size = getSlaveNodeHeapSize();
         break;
+      case "stargatenode":
+        size = getStargateNodeHeapSize();
+        break;
       default:
         final String msg = "Invalid request for heapsize for taskName = " + taskName;
         log.error(msg);
@@ -192,6 +195,8 @@ public class HBaseFrameworkConfig {
       case "slavenode":
         cpus = getSlaveNodeCpus();
         break;
+      case "stargatenode":
+        cpus = getStargateNodeCpus();
       default:
         final String msg = "Invalid request for CPUs for taskName= " + taskName;
         log.error(msg);
