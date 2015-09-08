@@ -1,0 +1,28 @@
+{
+  "healthChecks": [
+    {
+      "timeoutSeconds": 5,
+      "protocol": "HTTP",
+      "portIndex": 0,
+      "path": "/hdfs-site.xml",
+      "maxConsecutiveFailures": 0,
+      "intervalSeconds": 30,
+      "gracePeriodSeconds": 120
+    }
+  ],
+  "id": "/hbase-mesos/scheduler",
+  "instances": 1,
+  "cpus": 0.5,
+  "mem": 512,
+  "ports": [
+    8765
+  ],
+  "uris": [
+    "ftp://jzajic-nb/deploy/hbase-mesos-0.1.0.tgz",
+    "https://downloads.mesosphere.io/java/jre-7u76-linux-x64.tar.gz"
+  ],
+  "env": {
+  },
+  "cmd": "cd hbase-mesos-0.1.0 && JAVA_HOME=$(pwd)/jre-7u76-linux-x64 && ./bin/hbase-mesos"
+}
+

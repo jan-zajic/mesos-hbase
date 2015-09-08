@@ -1,0 +1,31 @@
+#!/bin/bash
+DIR_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )/../" && pwd )"
+
+if [ "$#" -ne 1 ]; then
+    echo "Usage: hbase-mesos-marathon MARATHON_ADDRESS";
+	exit
+fi
+
+MARATHON_ADDRESS=$1
+DEPLOYMENT_MACHINE=`hostname`
+
+PARENT_DIR=`dirname $DIR_PATH`
+DIR=`basename $DIR_PATH`
+
+echo "PARENT DIRECTORY: $PARENT_DIR"
+echo "DIRECTORY: $DIR"
+
+sed -r "s/\{DEPLOYMENT_MACHINE\}/$DEPLOYMENT_MACHINE/" $DIR_PATH/marathon.json > $DIR_PATH/marathon-depl.json
+
+cd $PARENT_DIR
+
+rm hbase-mesos-0.1.0.tgz
+tar -cvzf hbase-mesos-0.1.0.tgz -C $PARENT_DIR $DIR
+#cp /opt/hbase-mesos-0.1.0.tgz /var/ftp/deploy
+#deploy marathon
+curl -i -H 'Content-Type: application/json' -d @./$DIR/marathon-depl.json $MARATHON_ADDRESS:8080/v2/apps
+
+#update marathon
+#curl -i -X PUT -H 'Content-Type: application/json' -d @./$DIR/marathon-depl.json $MARATHON_ADDRESS:8080/v2/apps/hbase-mesos/scheduler
+#GO BACK TO DIR
+cd $DIR_PATH
