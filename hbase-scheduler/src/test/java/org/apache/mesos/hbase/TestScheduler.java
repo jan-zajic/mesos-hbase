@@ -55,31 +55,13 @@ public class TestScheduler {
 
   @Test
   public void statusUpdateWasStagingNowRunning() {
+    when(liveState.getCurrentAcquisitionPhase()).thenReturn(AcquisitionPhase.START_MASTER_NODES);
+    
     Protos.TaskID taskId = createTaskId("1");
 
     scheduler.statusUpdate(driver, createTaskStatus(taskId, Protos.TaskState.TASK_RUNNING));
 
     verify(liveState).removeStagingTask(taskId);
-  }
-
-  @Test
-  public void statusUpdateTransitionFromAcquiringJournalNodesToStartingNameNodes() {
-    Protos.TaskID taskId = createTaskId("1");
-
-    scheduler.statusUpdate(driver,
-        createTaskStatus(taskId, Protos.TaskState.TASK_RUNNING));
-
-    verify(liveState).transitionTo(AcquisitionPhase.START_MASTER_NODES);
-  }
-
-  @Test
-  public void statusUpdateAcquiringJournalNodesNotEnoughYet() {
-    Protos.TaskID taskId = createTaskId("1");
-
-    scheduler.statusUpdate(driver,
-        createTaskStatus(taskId, Protos.TaskState.TASK_RUNNING));
-
-    verify(liveState, never()).transitionTo(AcquisitionPhase.START_MASTER_NODES);
   }
 
   @Test
@@ -98,7 +80,7 @@ public class TestScheduler {
 
   @Test
   public void statusUpdateTransitionFromFormatNameNodesToDataNodes() {
-    when(liveState.getCurrentAcquisitionPhase()).thenReturn(AcquisitionPhase.SLAVE_NODES);
+    when(liveState.getCurrentAcquisitionPhase()).thenReturn(AcquisitionPhase.START_MASTER_NODES);
     when(liveState.getMasterNodeSize()).thenReturn(HBaseConstants.TOTAL_MASTER_NODES);
 
     scheduler.statusUpdate(

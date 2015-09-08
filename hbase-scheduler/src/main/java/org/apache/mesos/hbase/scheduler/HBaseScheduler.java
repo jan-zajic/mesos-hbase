@@ -303,7 +303,8 @@ public class HBaseScheduler implements org.apache.mesos.Scheduler, Runnable {
     String taskIdName = String.format("%s.%s.%d", nodeName, executorName,
         System.currentTimeMillis());
     List<Resource> resources = getExecutorResources();
-    ExecutorInfo executorInfo = createExecutor(taskIdName, taskType, nodeName, executorName, resources);
+    ExecutorInfo executorInfo = createExecutor(taskIdName, taskType, nodeName, executorName,
+        resources);
 
     List<Resource> taskResources = getTaskResources(taskType);
     String taskName = getNextTaskName(taskType);
@@ -353,7 +354,8 @@ public class HBaseScheduler implements org.apache.mesos.Scheduler, Runnable {
     return taskType;
   }
 
-  private ExecutorInfo createExecutor(String taskIdName, String taskType, String nodeName, String executorName,
+  private ExecutorInfo createExecutor(String taskIdName, String taskType, String nodeName,
+      String executorName,
       List<Resource> resources) {
     int confServerPort = hbaseFrameworkConfig.getConfigServerPort();
 
@@ -418,38 +420,38 @@ public class HBaseScheduler implements org.apache.mesos.Scheduler, Runnable {
             .setValue(cmd).build())
         .build();
   }
-  
+
   private String getJvmOpts(String taskType)
   {
-      if (HBaseConstants.STARGATE_NODE_ID.equals(taskType))
-        return hbaseFrameworkConfig.getJvmOpts();
-      else if (HBaseConstants.MASTER_NODE_ID.equals(taskType))
-        return hbaseFrameworkConfig.getJvmOpts();
-      else if (HBaseConstants.SLAVE_NODE_ID.equals(taskType))
-        return hbaseFrameworkConfig.getJvmOpts();  
-      else 
-        return hbaseFrameworkConfig.getJvmOpts();
+    if (HBaseConstants.STARGATE_NODE_ID.equals(taskType))
+      return hbaseFrameworkConfig.getJvmOpts();
+    else if (HBaseConstants.MASTER_NODE_ID.equals(taskType))
+      return hbaseFrameworkConfig.getJvmOpts();
+    else if (HBaseConstants.SLAVE_NODE_ID.equals(taskType))
+      return hbaseFrameworkConfig.getJvmOpts();
+    else
+      return hbaseFrameworkConfig.getJvmOpts();
   }
-  
+
   private String getHeapSizeConfig(String taskType)
   {
-      int heapSize = hbaseFrameworkConfig.getHadoopHeapSize();
-      if (null != taskType)
-        switch (taskType) {
-          case HBaseConstants.STARGATE_NODE_ID:
-              heapSize = hbaseFrameworkConfig.getStargateNodeHeapSize();
-              break;
-          case HBaseConstants.MASTER_NODE_ID:
-              heapSize = hbaseFrameworkConfig.getMasterNodeHeapSize();
-              break;
-          case HBaseConstants.SLAVE_NODE_ID:
-              heapSize = hbaseFrameworkConfig.getSlaveNodeHeapSize();
-              break;
+    int heapSize = hbaseFrameworkConfig.getHadoopHeapSize();
+    if (null != taskType)
+      switch (taskType) {
+        case HBaseConstants.STARGATE_NODE_ID:
+          heapSize = hbaseFrameworkConfig.getStargateNodeHeapSize();
+          break;
+        case HBaseConstants.MASTER_NODE_ID:
+          heapSize = hbaseFrameworkConfig.getMasterNodeHeapSize();
+          break;
+        case HBaseConstants.SLAVE_NODE_ID:
+          heapSize = hbaseFrameworkConfig.getSlaveNodeHeapSize();
+          break;
       }
-      
-      return String.format("%dm", heapSize);
+
+    return String.format("%dm", heapSize);
   }
-  
+
   private List<Resource> getExecutorResources() {
     return Arrays.asList(Resource.newBuilder()
         .setName("cpus")
@@ -572,7 +574,7 @@ public class HBaseScheduler implements org.apache.mesos.Scheduler, Runnable {
     }
     return false;
   }
-  
+
   private boolean tryToLaunchStargateNode(SchedulerDriver driver, Offer offer)
   {
     if (!acceptOffer(offer, "stargate", hbaseFrameworkConfig.getStargateNodeCpus(),
@@ -601,7 +603,7 @@ public class HBaseScheduler implements org.apache.mesos.Scheduler, Runnable {
     }
     return false;
   }
-  
+
   public void sendMessageTo(SchedulerDriver driver, TaskID taskId,
       SlaveID slaveID, String message) {
     log.info(String.format("Sending message '%s' to taskId=%s, slaveId=%s", message,
