@@ -43,4 +43,5 @@ Starting HBase-Mesos scheduler using marathon
 
 Using HBase
 --------------------------
-See REST API tutorial at https://wiki.apache.org/hadoop/Hbase/Stargate
+ * If your application is in Java, then you should use the Java API - https://hbase.apache.org/apidocs/org/apache/hadoop/hbase/client/package-summary.html
+ * Or see REST API tutorial at https://wiki.apache.org/hadoop/Hbase/Stargate
