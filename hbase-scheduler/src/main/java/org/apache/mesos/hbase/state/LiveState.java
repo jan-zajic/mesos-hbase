@@ -64,7 +64,7 @@ public class LiveState {
     return countOfRunningTasksWith(HBaseConstants.MASTER_NODE_TASKID);
   }
 
-  private int countOfRunningTasksWith(final String nodeId) {
+  private int countOfRunningTasksWith(final String nodeId) {      
     return Sets.filter(runningTasks.keySet(), new Predicate<String>() {
       @Override
       public boolean apply(String taskId) {

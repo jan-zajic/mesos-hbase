@@ -29,7 +29,7 @@
     <joda-time.version>2.4</joda-time.version>
     <jmte.version>3.0</jmte.version>
     <guice.version>3.0</guice.version>
-    <guava.version>18.0</guava.version>
+    <guava.version>12.0.1</guava.version>
     <junit.version>4.11</junit.version>
     <mockito.version>1.9.5</mockito.version>
   </properties>
@@ -212,12 +212,6 @@
           </configuration>
         </plugin>
 
-        <!-- Build an ÜberJar -->
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-shade-plugin</artifactId>
-          <version>2.3</version>
-        </plugin>
       </plugins>
     </pluginManagement>
 
@@ -237,47 +231,6 @@
                 </execution>
             </executions>
         </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-shade-plugin</artifactId>
-        <executions>
-          <execution>
-            <phase>package</phase>
-            <goals>
-              <goal>shade</goal>
-            </goals>
-            <configuration>
-              <createDependencyReducedPom>
-                false
-              </createDependencyReducedPom>
-              <shadedArtifactAttached>true</shadedArtifactAttached>
-              <shadedClassifierName>uber</shadedClassifierName>
-              <artifactSet>
-                <includes>
-                  <include>*:*</include>
-                </includes>
-              </artifactSet>
-              <!--<minimizeJar>true</minimizeJar>-->
-              <filters>
-                <filter>
-                  <artifact>commons-logging:commons-logging</artifact>
-                  <includes>
-                    <include>**</include>
-                  </includes>
-                </filter>
-                <filter>
-                  <artifact>*:*</artifact>
-                  <excludes>
-                    <exclude>META-INF/*.SF</exclude>
-                    <exclude>META-INF/*.DSA</exclude>
-                    <exclude>META-INF/*.RSA</exclude>
-                  </excludes>
-                </filter>
-              </filters>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
 
       <!-- Set main class -->
       <plugin>

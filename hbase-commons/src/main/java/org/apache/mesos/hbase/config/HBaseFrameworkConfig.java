@@ -38,9 +38,9 @@ public class HBaseFrameworkConfig {
   private static final int DEFAULT_DEADNODE_TIMEOUT = 90;
 
   private static final int DEFAULT_STARGATE_NODE_COUNT = 2;
-  
+
   private static final int DEFAULT_STARGATE_PORT = 8088;
-  
+
   private final Log log = LogFactory.getLog(HBaseFrameworkConfig.class);
 
   public HBaseFrameworkConfig(Configuration conf) {
@@ -117,7 +117,7 @@ public class HBaseFrameworkConfig {
   public int getStargateNodeHeapSize() {
     return getConf().getInt("mesos.hbase.stargate.heap.size", DEFAULT_STARGATE_HEAP_SIZE);
   }
-  
+
   public int getExecutorHeap() {
     return getConf().getInt("mesos.hbase.executor.heap.size", DEFAULT_EXECUTOR_HEAP_SIZE);
   }
@@ -125,11 +125,11 @@ public class HBaseFrameworkConfig {
   public int getStargateNodeCount() {
     return getConf().getInt("mesos.hbase.stargate.node.count", DEFAULT_STARGATE_NODE_COUNT);
   }
-  
+
   public int getStargateServerPort() {
-    return getConf().getInt("mesos.hbase.stargate.port", DEFAULT_STARGATE_PORT);  
+    return getConf().getInt("mesos.hbase.stargate.port", DEFAULT_STARGATE_PORT);
   }
-  
+
   public int getTaskHeapSize(String taskName) {
     int size;
     switch (taskName) {
@@ -177,7 +177,7 @@ public class HBaseFrameworkConfig {
   public double getMasterNodeCpus() {
     return getConf().getDouble("mesos.hbase.master.cpus", DEFAULT_NAMENODE_CPUS);
   }
-  
+
   public double getStargateNodeCpus() {
     return getConf().getDouble("mesos.hbase.stargate.cpus", DEFAULT_STARGATE_CPUS);
   }

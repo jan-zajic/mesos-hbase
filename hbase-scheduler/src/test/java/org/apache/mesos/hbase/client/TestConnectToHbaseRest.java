@@ -11,17 +11,17 @@ import org.apache.hadoop.hbase.rest.model.VersionModel;
  * @author jzajic
  */
 public class TestConnectToHbaseRest {
-  
+
   public static void main(String[] args) throws Exception
   {
-      Cluster cluster = new Cluster();
-      for(String arg : args)
-        cluster.add(arg, 8088);
-      
-      Client client = new Client(cluster);
-      RemoteAdmin remoteAdmin = new RemoteAdmin(client, new Configuration());   
-      VersionModel restVersion = remoteAdmin.getRestVersion();
-      System.out.println(restVersion.toString());
+    Cluster cluster = new Cluster();
+    for (String arg : args)
+      cluster.add(arg, 8088);
+
+    Client client = new Client(cluster);
+    RemoteAdmin remoteAdmin = new RemoteAdmin(client, new Configuration());
+    VersionModel restVersion = remoteAdmin.getRestVersion();
+    System.out.println(restVersion.toString());
   }
-  
+
 }

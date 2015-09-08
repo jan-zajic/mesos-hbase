@@ -177,24 +177,24 @@ public abstract class AbstractNodeExecutor implements Executor {
     }
     System.exit(statusCode);
   }
-  
+
   /**
    * Starts a task's process so it goes into running state.
    */
   protected void startProcess(ExecutorDriver driver, Task task) {
     reloadConfig();
-    
+
     File sandboxHdfsBinary = new File(System.getProperty("user.dir"));
     Path sandboxHdfsBinaryPath = Paths.get(sandboxHdfsBinary.getAbsolutePath());
-    
+
     log.info("The startProcess path is: " + sandboxHdfsBinaryPath);
-    
+
     if (task.getProcess() == null) {
       try {
         ProcessBuilder processBuilder = new ProcessBuilder("sh", "-c", task.getCmd());
         task.setProcess(processBuilder.start());
         redirectProcess(task.getProcess());
-        //send task success
+        // send task success
         driver.sendStatusUpdate(TaskStatus.newBuilder()
             .setTaskId(task.getTaskInfo().getTaskId())
             .setState(TaskState.TASK_RUNNING)
@@ -202,7 +202,7 @@ public abstract class AbstractNodeExecutor implements Executor {
       } catch (IOException e) {
         log.error("Unable to start process:", e);
         task.getProcess().destroy();
-        //send task failed
+        // send task failed
         sendTaskFailed(driver, task);
       }
     } else {
@@ -214,11 +214,11 @@ public abstract class AbstractNodeExecutor implements Executor {
    * Reloads the cluster configuration so the executor has the correct configuration info.
    */
   protected void reloadConfig() {
-      reloadConfig("hdfs-site.xml");
-      reloadConfig("hbase-site.xml");
-      reloadConfig("regionservers");
+    reloadConfig("hdfs-site.xml");
+    reloadConfig("hbase-site.xml");
+    reloadConfig("regionservers");
   }
-  
+
   protected void reloadConfig(String filename) 
   {
     if (hdfsFrameworkConfig.usingNativeHadoopBinaries()) {
