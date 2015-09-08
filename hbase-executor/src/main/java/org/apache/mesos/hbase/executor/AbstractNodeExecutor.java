@@ -208,6 +208,7 @@ public abstract class AbstractNodeExecutor implements Executor {
    * Reloads the cluster configuration so the executor has the correct configuration info.
    */
   protected void reloadConfig() {
+      reloadConfig("hdfs-site.xml");
       reloadConfig("hbase-site.xml");
       reloadConfig("regionservers");
   }

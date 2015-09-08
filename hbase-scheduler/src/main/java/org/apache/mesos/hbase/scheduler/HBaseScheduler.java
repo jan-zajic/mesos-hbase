@@ -2,6 +2,8 @@ package org.apache.mesos.hbase.scheduler;
 
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
+import java.io.IOException;
+import java.io.InputStream;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.mesos.MesosSchedulerDriver;
@@ -31,17 +33,22 @@ import org.apache.mesos.hbase.state.IPersistentStateStore;
 import org.apache.mesos.hbase.util.DnsResolver;
 
 import java.io.UnsupportedEncodingException;
+import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import org.apache.mesos.hbase.config.HBaseFrameworkConfig;
 import org.apache.mesos.hbase.util.HBaseConstants;
+import org.apache.mesos.hbase.util.HdfsConfFileUrlJsonFinder;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.type.TypeReference;
 
 /**
  * HBase Mesos Framework Scheduler class implementation.
@@ -57,6 +64,9 @@ public class HBaseScheduler implements org.apache.mesos.Scheduler, Runnable {
   private final IPersistentStateStore persistenceStore;
   private final DnsResolver dnsResolver;
 
+  private MasterInfo masterInfo;
+  private ObjectMapper mapper = new ObjectMapper();
+  
   @Inject
   public HBaseScheduler(HBaseFrameworkConfig hbaseFrameworkConfig,
       LiveState liveState, IPersistentStateStore persistenceStore) {
@@ -122,6 +132,7 @@ public class HBaseScheduler implements org.apache.mesos.Scheduler, Runnable {
 
   @Override
   public void registered(SchedulerDriver driver, FrameworkID frameworkId, MasterInfo masterInfo) {
+      
     try {
       persistenceStore.setFrameworkId(frameworkId);
     } catch (PersistenceException e) {
@@ -130,15 +141,17 @@ public class HBaseScheduler implements org.apache.mesos.Scheduler, Runnable {
       log.error(msg, e);
       throw new SchedulerException(msg, e);
     }
-    log.info("Registered framework frameworkId=" + frameworkId.getValue());
+    this.masterInfo = masterInfo;
+    log.info("Registered framework frameworkId=" + frameworkId.getValue());    
     // reconcile tasks upon registration
     reconcileTasks(driver);
   }
 
   @Override
   public void reregistered(SchedulerDriver driver, MasterInfo masterInfo) {
-    log.info("Reregistered framework: starting task reconciliation");
-    // reconcile tasks upon reregistration
+    this.masterInfo = masterInfo;
+    log.info("Reregistered framework: starting task reconciliation");   
+    // reconcile tasks upon reregistration    
     reconcileTasks(driver);
   }
 
@@ -254,7 +267,7 @@ public class HBaseScheduler implements org.apache.mesos.Scheduler, Runnable {
 
   private void registerFramework(HBaseScheduler sched, FrameworkInfo fInfo, String masterUri) {
     Credential cred = getCredential();
-
+      
     if (cred != null) {
       log.info("Registering with credentials.");
       new MesosSchedulerDriver(sched, fInfo, masterUri, cred).run();
@@ -375,6 +388,10 @@ public class HBaseScheduler implements org.apache.mesos.Scheduler, Runnable {
                         hbaseFrameworkConfig.getFrameworkHostAddress(),
                         confServerPort,
                         HBaseConstants.HBASE_CONFIG_FILE_NAME))
+                    .build(),
+                CommandInfo.URI
+                    .newBuilder()
+                    .setValue(getHdfsFileUrl())
                     .build(),
                 CommandInfo.URI
                     .newBuilder()
@@ -612,6 +629,28 @@ public class HBaseScheduler implements org.apache.mesos.Scheduler, Runnable {
     Timer timer = new Timer();
     timer.schedule(new ReconcileStateTask(), hbaseFrameworkConfig.getReconciliationTimeout()
         * SECONDS_FROM_MILLIS);
+  }
+
+  private String getHdfsFileUrl()
+  {
+      if(hbaseFrameworkConfig.usingMesosHdfs())
+      {
+          String masterStateUrl = String.format("http://%s:%d/%s", masterInfo.getHostname(), masterInfo.getPort(), "master/state.json");
+          try {
+            URL url = new URL(masterStateUrl);
+            HdfsConfFileUrlJsonFinder finder = new HdfsConfFileUrlJsonFinder(mapper);
+            String findedUrl = finder.findUrl(url);
+            return findedUrl;
+          } catch(IOException e) {
+            log.error("", e);
+          }
+      } else {
+          return String.format("http://%s:%d/%s",
+                        hbaseFrameworkConfig.getFrameworkHostAddress(),
+                        hbaseFrameworkConfig.getConfigServerPort(),
+                        HBaseConstants.HDFS_CONFIG_FILE_NAME);        
+      }
+      return null;
   }
 
   private class ReconcileStateTask extends TimerTask {

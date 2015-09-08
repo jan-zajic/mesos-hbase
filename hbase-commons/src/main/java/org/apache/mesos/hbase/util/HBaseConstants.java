@@ -32,6 +32,8 @@ public final class HBaseConstants {
 
   // HDFS Config File Name
   public static final String HBASE_CONFIG_FILE_NAME = "hbase-site.xml";
+  
+  public static final String HDFS_CONFIG_FILE_NAME = "hdfs-site.xml";
 
   //region servers file name
   public static final String REGION_SERVERS_FILENAME = "regionservers";
