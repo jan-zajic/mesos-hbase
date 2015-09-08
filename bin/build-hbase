@@ -114,6 +114,7 @@ mkdir -p $BUILD_DIR/$DIST/conf
 
 ## hbase scheduler project needs
 cp $PROJ_DIR/bin/hbase-mesos $BUILD_DIR/$DIST/bin
+cp $PROJ_DIR/bin/hbase-mesos-marathon $BUILD_DIR/$DIST/bin
 cp $PROJ_DIR/hbase-scheduler/build/libs/*-uber.jar $BUILD_DIR/$DIST/lib
 cp $BUILD_CACHE_DIR/$EXECUTOR.tgz $BUILD_DIR/$DIST
 cp $PROJ_DIR/conf/*.xml $BUILD_DIR/$DIST/conf
