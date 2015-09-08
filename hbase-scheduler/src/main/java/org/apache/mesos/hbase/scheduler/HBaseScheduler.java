@@ -635,7 +635,12 @@ public class HBaseScheduler implements org.apache.mesos.Scheduler, Runnable {
 
   private String getHdfsFileUrl()
   {
-    if (hbaseFrameworkConfig.usingMesosHdfs())
+    if (masterInfo == null)
+    {
+      log.error("Invalid scheduler state - masterInfo is null");
+      return getHbaseConfigServerHdfsFileUrl();
+    }
+    else if (hbaseFrameworkConfig.usingMesosHdfs())
     {
       String masterStateUrl = String.format("http://%s:%d/%s", masterInfo.getHostname(),
           masterInfo.getPort(), "master/state.json");
@@ -648,12 +653,17 @@ public class HBaseScheduler implements org.apache.mesos.Scheduler, Runnable {
         log.error("", e);
       }
     } else {
-      return String.format("http://%s:%d/%s",
-          hbaseFrameworkConfig.getFrameworkHostAddress(),
-          hbaseFrameworkConfig.getConfigServerPort(),
-          HBaseConstants.HDFS_CONFIG_FILE_NAME);
+      return getHbaseConfigServerHdfsFileUrl();
     }
     return null;
+  }
+
+  private String getHbaseConfigServerHdfsFileUrl()
+  {
+    return String.format("http://%s:%d/%s",
+        hbaseFrameworkConfig.getFrameworkHostAddress(),
+        hbaseFrameworkConfig.getConfigServerPort(),
+        HBaseConstants.HDFS_CONFIG_FILE_NAME);
   }
 
   private class ReconcileStateTask extends TimerTask {

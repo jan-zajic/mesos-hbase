@@ -219,7 +219,7 @@ public class HBaseFrameworkConfig {
   public Boolean usingMesosHdfs() {
     return Boolean.valueOf(getConf().get("mesos.hbase.mesoshdfs", "true"));
   }
-  
+
   public String getDfsNameServices() {
     return getConf().get("dfs.nameservices", "hdfs");
   }

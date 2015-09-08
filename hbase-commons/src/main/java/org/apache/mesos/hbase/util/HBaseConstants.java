@@ -9,14 +9,14 @@ public final class HBaseConstants {
   public static final Integer TOTAL_MASTER_NODES = 1;
 
   public static final String DEVELOPMENT_MODE_PROPERTY = "mesos.hbase.devel";
-  
+
   // Messages
   public static final String RELOAD_CONFIG = "reload config";
 
   // NodeIds
   public static final String MASTER_NODE_ID = "masternode";
   public static final String SLAVE_NODE_ID = "slavenode";
-  
+
   // NameNode TaskId
   public static final String MASTER_NODE_TASKID = ".masternode.masternode.";
 
@@ -32,18 +32,18 @@ public final class HBaseConstants {
 
   // HDFS Config File Name
   public static final String HBASE_CONFIG_FILE_NAME = "hbase-site.xml";
-  
+
   public static final String HDFS_CONFIG_FILE_NAME = "hdfs-site.xml";
 
-  //region servers file name
+  // region servers file name
   public static final String REGION_SERVERS_FILENAME = "regionservers";
-  
+
   private HBaseConstants() {
   }
-  
+
   public static boolean isDevelopmentMode()
   {
-      return System.getProperty("mesos.hbase.devel") != null;
+    return System.getProperty("mesos.hbase.devel") != null;
   }
-  
+
 }

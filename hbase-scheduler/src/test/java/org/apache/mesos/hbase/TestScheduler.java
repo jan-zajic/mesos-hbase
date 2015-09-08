@@ -122,38 +122,16 @@ public class TestScheduler {
   }
 
   @Test
-  public void startsAJournalNodeWhenGivenAnOffer() {
-    scheduler.resourceOffers(driver,
-        Lists.newArrayList(createTestOfferWithResources(0, 2, 2048)));
-
-    verify(driver, times(1)).launchTasks(anyList(), taskInfosCapture.capture());
-    assertEquals(1, taskInfosCapture.getValue().size());
-  }
-
-  @Test
-  public void launchesOnlyNeededNumberOfJournalNodes() {
-    HashMap<String, String> journalNodes = new HashMap<String, String>();
-    journalNodes.put("host1", "journalnode1");
-    journalNodes.put("host2", "journalnode2");
-    journalNodes.put("host3", "journalnode3");
-
-    scheduler.resourceOffers(driver, Lists.newArrayList(createTestOffer(0)));
-
-    verify(driver, never()).launchTasks(anyList(), anyList());
-  }
-
-  @Test
-  public void launchesNamenodeWhenInNamenode1Phase() {
+  public void launchesMasterNodeWhenInMasternode1Phase() {
     when(liveState.getCurrentAcquisitionPhase()).thenReturn(AcquisitionPhase.START_MASTER_NODES);
     when(persistenceStore.getPrimaryNodeTaskNames()).thenReturn(new HashMap<String, String>());
 
     scheduler.resourceOffers(driver, Lists.newArrayList(createTestOffer(0)));
 
     verify(driver, times(1)).launchTasks(anyList(), taskInfosCapture.capture());
-    assertTrue(taskInfosCapture.getValue().size() == 2);
+    assertTrue(taskInfosCapture.getValue().size() == 1);
     Iterator<Protos.TaskInfo> taskInfoIterator = taskInfosCapture.getValue().iterator();
     String firstTask = taskInfoIterator.next().getName();
-    String secondTask = taskInfoIterator.next().getName();
   }
 
   @Test
