@@ -35,4 +35,9 @@ Starting HBase-Mesos scheduler standalone
 
 Starting HBase-Mesos scheduler using marathon
 --------------------------
+1. Run ftp server on your deployment machine
+2. `cd hbase-mesos-*`
+3. edit file `bin/hbase-mesos-marathon` and change FTP_DIR path variable to anonymous ftp root directory
+4. `./bin/hbase-mesos-marathon MARATHON_ADDRESS`
+5. Check the Marathon web console, after that Mesos web console
 

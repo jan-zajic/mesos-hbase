@@ -8,6 +8,7 @@ fi
 
 MARATHON_ADDRESS=$1
 DEPLOYMENT_MACHINE=`hostname`
+FTP_DIR=/var/ftp
 
 PARENT_DIR=`dirname $DIR_PATH`
 DIR=`basename $DIR_PATH`
@@ -21,7 +22,7 @@ cd $PARENT_DIR
 
 rm hbase-mesos-0.1.0.tgz
 tar -cvzf hbase-mesos-0.1.0.tgz -C $PARENT_DIR $DIR
-#cp /opt/hbase-mesos-0.1.0.tgz /var/ftp/deploy
+cp hbase-mesos-0.1.0.tgz $FTP_DIR/deploy
 #deploy marathon
 curl -i -H 'Content-Type: application/json' -d @./$DIR/marathon-depl.json $MARATHON_ADDRESS:8080/v2/apps
 
