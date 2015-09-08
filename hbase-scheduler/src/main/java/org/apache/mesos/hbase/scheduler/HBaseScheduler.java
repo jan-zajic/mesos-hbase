@@ -52,6 +52,7 @@ import org.codehaus.jackson.type.TypeReference;
 
 /**
  * HBase Mesos Framework Scheduler class implementation.
+ * TODO: add start of https://wiki.apache.org/hadoop/Hbase/Stargate
  */
 public class HBaseScheduler implements org.apache.mesos.Scheduler, Runnable {
   // TODO (elingg) remove as much logic as possible from Scheduler to clean up code
