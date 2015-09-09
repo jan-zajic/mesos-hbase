@@ -23,7 +23,7 @@ public interface IPersistentStateStore {
 
   Map<String, String> getPrimaryNodeTaskNames();
 
-  List<String> getDeadNameNodes();
+  List<String> getDeadMasterNodes();
 
   List<String> getDeadDataNodes();
 
@@ -35,8 +35,8 @@ public interface IPersistentStateStore {
 
   Map<String, String> getStargateNodes();
 
-  boolean dataNodeRunningOnSlave(String hostname);
+  boolean slaveNodeRunningOnSlave(String hostname);
 
-  boolean nameNodeRunningOnSlave(String hostname);
+  boolean masterNodeRunningOnSlave(String hostname);
 
 }

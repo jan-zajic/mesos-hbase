@@ -37,7 +37,7 @@ public class PersistentStateStore implements IPersistentStateStore
   private DeadNodeTracker deadNodeTracker;
 
   private static final String FRAMEWORK_ID_KEY = "frameworkId";
-  private static final String NAMENODE_TASKNAMES_KEY = "nameNodeTaskNames";
+  private static final String MASTERNODE_TASKNAMES_KEY = "masterNodeTaskNames";
 
   // TODO (elingg) we need to also track ZKFC's state
   // TODO (nicgrayson) add tests with in-memory state implementation for zookeeper
@@ -51,11 +51,11 @@ public class PersistentStateStore implements IPersistentStateStore
     this.hbaseStore = hbaseStore;
     this.deadNodeTracker = deadNodeTracker;
 
-    int deadNameNodes = getDeadNameNodes().size();
+    int deadMasterNodes = getDeadMasterNodes().size();
     int deadDataNodes = getDeadDataNodes().size();
     int deadStargateNodes = getDeadStargateNodes().size();
 
-    deadNodeTracker.resetDeadNodeTimeStamps(deadNameNodes, deadDataNodes, deadStargateNodes);
+    deadNodeTracker.resetDeadNodeTimeStamps(deadMasterNodes, deadDataNodes, deadStargateNodes);
   }
 
   @Override
@@ -100,7 +100,7 @@ public class PersistentStateStore implements IPersistentStateStore
     // TODO (elingg) optimize this method/ Possibly index by task id instead of hostname/
     // Possibly call removeTask(slaveId, taskId) to avoid iterating through all maps
 
-    if (removeTaskIdFromNameNodes(taskId)
+    if (removeTaskIdFromMasterNodes(taskId)
         || removeTaskIdFromDataNodes(taskId)) {
       logger.debug("task id: " + taskId + " removed");
     } else {
@@ -113,7 +113,7 @@ public class PersistentStateStore implements IPersistentStateStore
   {
     switch (taskType) {
       case HBaseConstants.MASTER_NODE_ID:
-        addNameNode(taskId, hostname, taskName);
+        addPrimaryNode(taskId, hostname, taskName);
         break;
       case HBaseConstants.SLAVE_NODE_ID:
         addDataNode(taskId, hostname);
@@ -139,51 +139,51 @@ public class PersistentStateStore implements IPersistentStateStore
     setStargateNodes(dataNodes);
   }
 
-  private void addNameNode(Protos.TaskID taskId, String hostname, String taskName)
+  private void addPrimaryNode(Protos.TaskID taskId, String hostname, String taskName)
   {
-    Map<String, String> nameNodes = getPrimaryNodes();
-    nameNodes.put(hostname, taskId.getValue());
-    setNameNodes(nameNodes);
-    Map<String, String> nameNodeTaskNames = getPrimaryNodeTaskNames();
-    nameNodeTaskNames.put(taskId.getValue(), taskName);
-    setNameNodeTaskNames(nameNodeTaskNames);
+    Map<String, String> primaryNodes = getPrimaryNodes();
+    primaryNodes.put(hostname, taskId.getValue());
+    setPrimaryNodes(primaryNodes);
+    Map<String, String> primaryNodeTaskNames = getPrimaryNodeTaskNames();
+    primaryNodeTaskNames.put(taskId.getValue(), taskName);
+    setPrimaryNodeTaskNames(primaryNodeTaskNames);
   }
 
   @Override
   public Map<String, String> getPrimaryNodeTaskNames()
   {
-    return getNodesMap(NAMENODE_TASKNAMES_KEY);
+    return getNodesMap(MASTERNODE_TASKNAMES_KEY);
   }
 
   @Override
-    public List<String> getDeadNameNodes()
+    public List<String> getDeadMasterNodes()
     {
-        List<String> deadNameHosts = new ArrayList<>();
+        List<String> deadMasterHosts = new ArrayList<>();
 
         if (deadNodeTracker.masterNodeTimerExpired()) {
-            removeDeadNameNodes();
+            removeDeadPrimaryNodes();
         } else {
-            Map<String, String> nameNodes = getPrimaryNodes();
-            final Set<Map.Entry<String, String>> nameNodeEntries = nameNodes.entrySet();
-            for (Map.Entry<String, String> nameNode : nameNodeEntries) {
-                if (nameNode.getValue() == null) {
-                    deadNameHosts.add(nameNode.getKey());
+            Map<String, String> masterNodes = getPrimaryNodes();
+            final Set<Map.Entry<String, String>> masterNodeEntries = masterNodes.entrySet();
+            for (Map.Entry<String, String> masterNode : masterNodeEntries) {
+                if (masterNode.getValue() == null) {
+                    deadMasterHosts.add(masterNode.getKey());
                 }
             }
         }
-        return deadNameHosts;
+        return deadMasterHosts;
     }
 
-  private void removeDeadNameNodes()
+  private void removeDeadPrimaryNodes()
   {
-    deadNodeTracker.resetNameNodeTimeStamp();
-    Map<String, String> nameNodes = getPrimaryNodes();
-    List<String> deadNameHosts = getDeadNameNodes();
-    for (String deadNameHost : deadNameHosts) {
-      nameNodes.remove(deadNameHost);
-      logger.info("Removing NN Host: " + deadNameHost);
+    deadNodeTracker.resetMasterNodeTimeStamp();
+    Map<String, String> masterNodes = getPrimaryNodes();
+    List<String> deadMasterHosts = getDeadMasterNodes();
+    for (String deadMasterHost : deadMasterHosts) {
+      masterNodes.remove(deadMasterHost);
+      logger.info("Removing dead master node Host: " + deadMasterHost);
     }
-    setNameNodes(nameNodes);
+    setPrimaryNodes(masterNodes);
   }
 
   @Override
@@ -230,13 +230,13 @@ public class PersistentStateStore implements IPersistentStateStore
   }
 
   @Override
-  public boolean dataNodeRunningOnSlave(String hostname)
+  public boolean slaveNodeRunningOnSlave(String hostname)
   {
     return getRegionNodes().containsKey(hostname);
   }
 
   @Override
-  public boolean nameNodeRunningOnSlave(String hostname)
+  public boolean masterNodeRunningOnSlave(String hostname)
   {
     return getPrimaryNodes().containsKey(hostname);
   }
@@ -245,9 +245,9 @@ public class PersistentStateStore implements IPersistentStateStore
   public Set<String> getAllTaskIds()
   {
     Set<String> allTaskIds = new HashSet<String>();
-    Collection<String> nameNodes = getPrimaryNodes().values();
+    Collection<String> masterNodes = getPrimaryNodes().values();
     Collection<String> dataNodes = getRegionNodes().values();
-    allTaskIds.addAll(nameNodes);
+    allTaskIds.addAll(masterNodes);
     allTaskIds.addAll(dataNodes);
     return allTaskIds;
 
@@ -267,21 +267,21 @@ public class PersistentStateStore implements IPersistentStateStore
         }
     }
 
-  private boolean removeTaskIdFromNameNodes(String taskId)
+  private boolean removeTaskIdFromMasterNodes(String taskId)
   {
     boolean nodesModified = false;
 
-    Map<String, String> nameNodes = getPrimaryNodes();
-    if (nameNodes.values().contains(taskId)) {
-      for (Map.Entry<String, String> entry : nameNodes.entrySet()) {
+    Map<String, String> primaryNodes = getPrimaryNodes();
+    if (primaryNodes.values().contains(taskId)) {
+      for (Map.Entry<String, String> entry : primaryNodes.entrySet()) {
         if (entry.getValue() != null && entry.getValue().equals(taskId)) {
-          nameNodes.put(entry.getKey(), null);
-          setNameNodes(nameNodes);
-          Map<String, String> nameNodeTaskNames = getPrimaryNodeTaskNames();
-          nameNodeTaskNames.remove(taskId);
-          setNameNodeTaskNames(nameNodeTaskNames);
+          primaryNodes.put(entry.getKey(), null);
+          setPrimaryNodes(primaryNodes);
+          Map<String, String> masterNodeTaskNames = getPrimaryNodeTaskNames();
+          masterNodeTaskNames.remove(taskId);
+          setPrimaryNodeTaskNames(masterNodeTaskNames);
 
-          deadNodeTracker.resetNameNodeTimeStamp();
+          deadNodeTracker.resetMasterNodeTimeStamp();
           nodesModified = true;
         }
       }
@@ -308,21 +308,21 @@ public class PersistentStateStore implements IPersistentStateStore
     return nodesModified;
   }
 
-  private void setNameNodes(Map<String, String> nameNodes)
+  private void setPrimaryNodes(Map<String, String> primaryNodes)
   {
     try {
-      hbaseStore.set(MASTERNODES_KEY, nameNodes);
+      hbaseStore.set(MASTERNODES_KEY, primaryNodes);
     } catch (Exception e) {
-      logger.error("Error while setting name nodes in persistent state", e);
+      logger.error("Error while setting primary nodes in persistent state", e);
     }
   }
 
-  private void setNameNodeTaskNames(Map<String, String> nameNodeTaskNames)
+  private void setPrimaryNodeTaskNames(Map<String, String> primaryNodeTaskNames)
   {
     try {
-      hbaseStore.set(NAMENODE_TASKNAMES_KEY, nameNodeTaskNames);
+      hbaseStore.set(MASTERNODE_TASKNAMES_KEY, primaryNodeTaskNames);
     } catch (Exception e) {
-      logger.error("Error while setting name node task names in persistent state", e);
+      logger.error("Error while setting primary node task names in persistent state", e);
     }
   }
 

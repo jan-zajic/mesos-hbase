@@ -7,7 +7,7 @@ import org.apache.mesos.hbase.scheduler.HBaseScheduler;
 import java.util.TimerTask;
 
 /**
- * Used for a NameNode init timer to see if DNS is complete.
+ * Used for a Primary node init timer to see if DNS is complete.
  */
 public class PreNNInitTask extends TimerTask {
 

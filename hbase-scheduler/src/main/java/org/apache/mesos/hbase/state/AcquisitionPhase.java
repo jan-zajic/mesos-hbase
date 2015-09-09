@@ -20,7 +20,7 @@ public enum AcquisitionPhase {
   RECONCILING_TASKS,
 
   /**
-   * Launches the both namenodes.
+   * Launches the both masters.
    */
   START_MASTER_NODES,
 

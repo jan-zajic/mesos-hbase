@@ -495,7 +495,7 @@ public class HBaseScheduler implements org.apache.mesos.Scheduler, Runnable {
     if (offerNotEnoughCpu(offer, cpu))
     {
       log.info(nodeType + " node offer does not have enough cpu.\n Required " + cpu
-          + ". (NameNodeCpus)");
+          + ". (ConfNodeCpus)");
       return false;
     }
     else if (offerNotEnoughMemory(offer, memory))
@@ -518,19 +518,19 @@ public class HBaseScheduler implements org.apache.mesos.Scheduler, Runnable {
       return false;
 
     boolean launch = false;
-    List<String> deadNameNodes = persistenceStore.getDeadNameNodes();
+    List<String> deadMasterNodes = persistenceStore.getDeadMasterNodes();
 
-    if (deadNameNodes.isEmpty()) {
+    if (deadMasterNodes.isEmpty()) {
       if (persistenceStore.getPrimaryNodes().size() == HBaseConstants.TOTAL_MASTER_NODES) {
-        log.info(String.format("Already running %s namenodes", HBaseConstants.TOTAL_MASTER_NODES));
-      } else if (persistenceStore.nameNodeRunningOnSlave(offer.getHostname())) {
-        log.info(String.format("Already running namenode on %s", offer.getHostname()));
-      } else if (persistenceStore.dataNodeRunningOnSlave(offer.getHostname())) {
-        log.info(String.format("Cannot colocate namenode and datanode on %s", offer.getHostname()));
+        log.info(String.format("Already running %s masters", HBaseConstants.TOTAL_MASTER_NODES));
+      } else if (persistenceStore.masterNodeRunningOnSlave(offer.getHostname())) {
+        log.info(String.format("Already running masternode on %s", offer.getHostname()));
+      } else if (persistenceStore.slaveNodeRunningOnSlave(offer.getHostname())) {
+        log.info(String.format("Cannot colocate masternode and slavenode on %s", offer.getHostname()));
       } else {
         launch = true;
       }
-    } else if (deadNameNodes.contains(offer.getHostname())) {
+    } else if (deadMasterNodes.contains(offer.getHostname())) {
       launch = true;
     }
     if (launch) {
@@ -554,8 +554,8 @@ public class HBaseScheduler implements org.apache.mesos.Scheduler, Runnable {
     // What number of DN's should we try to recover or should we remove this constraint
     // entirely?
     if (deadDataNodes.isEmpty()) {
-      if (persistenceStore.dataNodeRunningOnSlave(offer.getHostname())
-          || persistenceStore.nameNodeRunningOnSlave(offer.getHostname()))
+      if (persistenceStore.slaveNodeRunningOnSlave(offer.getHostname())
+          || persistenceStore.masterNodeRunningOnSlave(offer.getHostname()))
       {
         log.info(String.format("Already running hbase task on %s", offer.getHostname()));
         return tryToLaunchStargateNode(driver, offer);
@@ -582,16 +582,16 @@ public class HBaseScheduler implements org.apache.mesos.Scheduler, Runnable {
       return false;
 
     boolean launch = false;
-    List<String> deadNameNodes = persistenceStore.getDeadStargateNodes();
+    List<String> deadStargateNodes = persistenceStore.getDeadStargateNodes();
 
-    if (deadNameNodes.isEmpty()) {
+    if (deadStargateNodes.isEmpty()) {
       if (persistenceStore.getStargateNodes().size() >= hbaseFrameworkConfig.getStargateNodeCount()) {
         log.info(String.format("Already running %s stargate nodes",
             hbaseFrameworkConfig.getStargateNodeCount()));
       } else {
         launch = true;
       }
-    } else if (deadNameNodes.contains(offer.getHostname())) {
+    } else if (deadStargateNodes.contains(offer.getHostname())) {
       launch = true;
     }
     if (launch) {
@@ -721,9 +721,9 @@ public class HBaseScheduler implements org.apache.mesos.Scheduler, Runnable {
     @Override
     public void run() {
       log.info("Current persistent state:");
-      log.info(String.format("NameNodes: %s, %s", persistenceStore.getPrimaryNodes(),
+      log.info(String.format("Primary Nodes: %s, %s", persistenceStore.getPrimaryNodes(),
           persistenceStore.getPrimaryNodeTaskNames()));
-      log.info(String.format("DataNodes: %s", persistenceStore.getRegionNodes()));
+      log.info(String.format("Slave Nodes: %s", persistenceStore.getRegionNodes()));
 
       Set<String> taskIds = persistenceStore.getAllTaskIds();
       Set<String> runningTaskIds = liveState.getRunningTasks().keySet();

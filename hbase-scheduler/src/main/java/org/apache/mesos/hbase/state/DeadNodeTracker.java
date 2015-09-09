@@ -44,10 +44,10 @@ public class DeadNodeTracker
     timestampMap.put(nodeType, new Timestamp(date.getTime()));
   }
 
-  public void resetDeadNodeTimeStamps(int deadNameNodes, int deadDataNodes, int deadStargateNodes)
+  public void resetDeadNodeTimeStamps(int deadMasterNodes, int deadDataNodes, int deadStargateNodes)
   {
-    if (deadNameNodes > 0) {
-      resetNameNodeTimeStamp();
+    if (deadMasterNodes > 0) {
+      resetMasterNodeTimeStamp();
     }
 
     if (deadDataNodes > 0) {
@@ -59,7 +59,7 @@ public class DeadNodeTracker
     }
   }
 
-  public void resetNameNodeTimeStamp()
+  public void resetMasterNodeTimeStamp()
   {
     resetNodeTimeStamp(MASTERNODES_KEY);
   }
