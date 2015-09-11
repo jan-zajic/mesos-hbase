@@ -3,6 +3,8 @@ HBase on Apache Mesos
 
 Starts Master node, optional number of Stargate REST nodes and region slave nodes.
 
+Base on source code from https://github.com/mesosphere/hdfs.
+
 Prerequisites
 --------------------------
 1. Install `tar`, `unzip`, `wget` in your build host. Set proxy for maven / gradle and wget if needed.
