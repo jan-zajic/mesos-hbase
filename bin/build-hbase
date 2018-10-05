@@ -8,10 +8,10 @@ PROJ_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )"/..  && pwd )"
 BUILD_DIR=$PROJ_DIR/build
 BUILD_CACHE_DIR=$BUILD_DIR/cache
 
-HBASE_VER=1.1.2
+HBASE_VER=1.2.7
 HBASE_DIR=hbase-$HBASE_VER
 HBASE_ZIP=$HBASE_DIR-bin.tar.gz
-HBASE_URL=https://www.apache.org/dist/hbase/1.1.2/$HBASE_ZIP
+HBASE_URL=https://www.apache.org/dist/hbase/1.2.7/$HBASE_ZIP
 
 echo "build dir is: $BUILD_DIR"
 
